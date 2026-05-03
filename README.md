@@ -152,10 +152,3 @@ Tables: `users`, `watchlist_items`, `notifications`, `cache`,
   The 2-minute background loop will refresh them automatically when new news
   arrives.
 
-## What's next (thesis roadmap)
-
-- Replace yfinance news with a wider source (NewsAPI, RSS aggregator).
-- Migrate from SQLite to PostgreSQL for production.
-- Fine-tune FinBERT on a labeled financial-news dataset (Section 4.2.2).
-- Properly train the fusion model with cross-validation (Section 6).
-- WebSocket push for live price + notifications (instead of polling).
