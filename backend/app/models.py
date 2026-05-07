@@ -113,6 +113,27 @@ class PriceBar(Base):
     )
 
 
+class CorpEvent(Base):
+    """Corporate events: earnings, dividends, stock splits.
+    Keyed by (ticker, event_type, event_date) — upserted on every refresh."""
+    __tablename__ = "corp_events"
+    id = Column(Integer, primary_key=True)
+    ticker = Column(String, nullable=False, index=True)
+    event_type = Column(String, nullable=False)       # "earnings" | "dividend" | "split"
+    event_date = Column(String, nullable=False)        # ISO date "2024-05-02"
+    ts = Column(Float, nullable=False)                 # unix timestamp for ordering
+    label = Column(String, default="")
+    value = Column(Float, nullable=True)               # dividend amount or split ratio
+    eps_actual = Column(Float, nullable=True)
+    eps_estimate = Column(Float, nullable=True)
+    fetched_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("ticker", "event_type", "event_date", name="uq_corp_event"),
+        Index("ix_corp_event_ticker_ts", "ticker", "ts"),
+    )
+
+
 class PredictionRecord(Base):
     """Every prediction we've ever generated — lets us evaluate accuracy
     against realized returns later."""

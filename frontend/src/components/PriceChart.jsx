@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { createChart, CrosshairMode } from "lightweight-charts";
 
+const EVENT_COLORS = {
+  earnings:      "#58a6ff",
+  earnings_call: "#bc8cff",
+  dividend:      "#3fb950",
+  split:         "#e3b341",
+};
+const EVENT_LETTER = {
+  earnings: "E", earnings_call: "C", dividend: "D", split: "S",
+};
+
 function fmtPrice(v) {
   if (v == null || isNaN(v)) return "—";
   return v.toFixed(2);
@@ -13,7 +23,6 @@ function fmtVol(v) {
   return v.toFixed(0);
 }
 function fmtCrosshairTime(t, intraday) {
-  // lightweight-charts gives `t` as a UNIX timestamp (number) for time-axis charts
   if (typeof t !== "number") return "";
   const d = new Date(t * 1000);
   if (isNaN(d.getTime())) return "";
@@ -22,12 +31,28 @@ function fmtCrosshairTime(t, intraday) {
     : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
-export default function PriceChart({ candles, chartType = "candle", fit = true, intraday = false }) {
+// Snap an event timestamp to the closest candle time (lightweight-charts requires
+// markers to sit on an exact bar time, otherwise the marker is silently dropped).
+function snapToCandle(eventTs, candles) {
+  if (!candles?.length) return null;
+  let best = candles[0].time;
+  let bestDiff = Math.abs(candles[0].time - eventTs);
+  for (const c of candles) {
+    const d = Math.abs(c.time - eventTs);
+    if (d < bestDiff) { best = c.time; bestDiff = d; }
+  }
+  return best;
+}
+
+export default function PriceChart({
+  candles, chartType = "candle", fit = true, intraday = false,
+  events = [], visibleEventTypes = null, onEventClick,
+}) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
-  // last-bar fallback when cursor is not on the chart
   const lastBar = candles && candles.length ? candles[candles.length - 1] : null;
   const [cross, setCross] = useState(null);
+  const [eventLines, setEventLines] = useState([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -89,8 +114,6 @@ export default function PriceChart({ candles, chartType = "candle", fit = true, 
       scaleMargins: { top: 0.85, bottom: 0 },
     });
 
-    // Track which raw candle corresponds to which time so we can show full OHLCV
-    // for line charts (where the series only carries a value).
     const candleByTime = new Map();
 
     chart.subscribeCrosshairMove((param) => {
@@ -128,6 +151,7 @@ export default function PriceChart({ candles, chartType = "candle", fit = true, 
       chart.remove();
       chartRef.current = null;
       setCross(null);
+      setEventLines([]);
     };
   }, [chartType]);
 
@@ -156,6 +180,69 @@ export default function PriceChart({ candles, chartType = "candle", fit = true, 
     }
   }, [candles, chartType, fit]);
 
+  // Event overlays — markers on the price series + absolutely-positioned dashed
+  // vertical lines whose x-coords are recomputed when the chart pans/zooms.
+  useEffect(() => {
+    if (!chartRef.current || !candles?.length) {
+      setEventLines([]);
+      return;
+    }
+    const { chart, priceSeries } = chartRef.current;
+    const visible = (events || []).filter(
+      (e) => !visibleEventTypes || visibleEventTypes.has(e.type)
+    );
+    const firstT = candles[0].time;
+    const lastT = candles[candles.length - 1].time;
+
+    // Markers must be sorted by time; multiple events on the same bar are merged
+    const bySnap = new Map();
+    for (const ev of visible) {
+      if (ev.ts < firstT - 86400 || ev.ts > lastT + 86400) continue;
+      const snapped = snapToCandle(ev.ts, candles);
+      if (snapped == null) continue;
+      const existing = bySnap.get(snapped);
+      if (existing) existing.push(ev);
+      else bySnap.set(snapped, [ev]);
+    }
+    const markers = Array.from(bySnap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([time, evs]) => {
+        const ev = evs[0];
+        return {
+          time,
+          position: "aboveBar",
+          color: EVENT_COLORS[ev.type] || "#8b949e",
+          shape: "circle",
+          text: evs.length > 1 ? "★" : (EVENT_LETTER[ev.type] || "•"),
+        };
+      });
+    try { priceSeries.setMarkers(markers); } catch { /* series might be torn down */ }
+
+    function updateLines() {
+      const ts = chart.timeScale();
+      const lines = [];
+      for (const ev of visible) {
+        const snapped = snapToCandle(ev.ts, candles);
+        if (snapped == null) continue;
+        const x = ts.timeToCoordinate(snapped);
+        if (x == null) continue;
+        lines.push({ ...ev, x, snapped });
+      }
+      setEventLines(lines);
+    }
+
+    updateLines();
+    const tScale = chart.timeScale();
+    tScale.subscribeVisibleTimeRangeChange(updateLines);
+    tScale.subscribeVisibleLogicalRangeChange(updateLines);
+    return () => {
+      try {
+        tScale.unsubscribeVisibleTimeRangeChange(updateLines);
+        tScale.unsubscribeVisibleLogicalRangeChange(updateLines);
+      } catch { /* chart torn down */ }
+    };
+  }, [events, visibleEventTypes, candles, chartType]);
+
   const display = cross || (lastBar ? {
     time: lastBar.time,
     open: lastBar.open, high: lastBar.high, low: lastBar.low,
@@ -179,7 +266,23 @@ export default function PriceChart({ candles, chartType = "candle", fit = true, 
           <span><span className="ro-label">Vol</span> {fmtVol(display.volume)}</span>
         </div>
       )}
-      <div ref={containerRef} style={{ width: "100%", height: 460 }} />
+      <div className="chart-wrap" style={{ position: "relative" }}>
+        <div ref={containerRef} style={{ width: "100%", height: 460 }} />
+        <div className="chart-event-overlay">
+          {eventLines.map((e, i) => (
+            <div
+              key={`${e.type}-${e.ts}-${i}`}
+              className={`chart-event-line type-${e.type}`}
+              style={{
+                left: `${e.x}px`,
+                borderLeftColor: EVENT_COLORS[e.type] || "#8b949e",
+              }}
+              title={`${e.label} · ${e.date}`}
+              onClick={() => onEventClick && onEventClick(e)}
+            />
+          ))}
+        </div>
+      </div>
     </>
   );
 }

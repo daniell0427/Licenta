@@ -6,7 +6,16 @@ import NewsList from "../components/NewsList.jsx";
 import Predictions from "../components/Predictions.jsx";
 import SentimentGauge from "../components/SentimentGauge.jsx";
 import PeriodSummary from "../components/PeriodSummary.jsx";
+import EventsList from "../components/EventsList.jsx";
+import EventDetailModal from "../components/EventDetailModal.jsx";
 import { Skeleton } from "../components/Loading.jsx";
+
+const CHART_EVENT_TYPES = [
+  { id: "earnings",      label: "Earnings",  color: "#58a6ff" },
+  { id: "earnings_call", label: "Calls",     color: "#bc8cff" },
+  { id: "dividend",      label: "Dividends", color: "#3fb950" },
+  { id: "split",         label: "Splits",    color: "#e3b341" },
+];
 
 // Line mode: timeframe = visible window. Chart fits to this period.
 const LINE_TIMEFRAMES = [
@@ -43,8 +52,23 @@ export default function Dashboard() {
   const [candleTf, setCandleTf] = useState("1D");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [data, setData] = useState({ price: null, news: null, predict: null });
+  const [data, setData] = useState({ price: null, news: null, predict: null, events: null });
   const [quote, setQuote] = useState(null);
+  const [chartEventTypes, setChartEventTypes] = useState(
+    () => new Set(CHART_EVENT_TYPES.map((t) => t.id))
+  );
+  const [selectedChartEvent, setSelectedChartEvent] = useState(null);
+
+  function toggleChartEventType(id) {
+    setChartEventTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  const allChartEvents = data.events
+    ? [...(data.events.past || []), ...(data.events.upcoming || [])]
+    : [];
 
   const tfList = chartType === "line" ? LINE_TIMEFRAMES : CANDLE_TIMEFRAMES;
   const currentTfId = chartType === "line" ? lineTf : candleTf;
@@ -138,6 +162,22 @@ export default function Dashboard() {
     return () => { cancelled = true; clearInterval(id); };
   }, [ticker]);
 
+  // Events — fetched once per ticker, no polling needed (data is stable)
+  useEffect(() => {
+    let cancelled = false;
+    async function loadEvents() {
+      try {
+        const events = await api(`/api/events/${ticker}`);
+        if (!cancelled) setData((d) => ({ ...d, events }));
+      } catch {
+        if (!cancelled) setData((d) => ({ ...d, events: { past: [], upcoming: [] } }));
+      }
+    }
+    setData((d) => ({ ...d, events: null }));
+    loadEvents();
+    return () => { cancelled = true; };
+  }, [ticker]);
+
   const sent = data.news?.sentiment_score ?? 0;
   const last = quote?.price
     ?? (data.price?.candles?.length ? data.price.candles.at(-1).close : null);
@@ -197,6 +237,31 @@ export default function Dashboard() {
                     onClick={() => setChartType("line")}
                   >Line</button>
                 </div>
+                <div className="event-toggle-group">
+                  {CHART_EVENT_TYPES.map((t) => {
+                    const on = chartEventTypes.has(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        className={`event-toggle-btn${on ? " on" : ""}`}
+                        style={on ? {
+                          borderColor: t.color,
+                          color: t.color,
+                          background: `${t.color}1a`,
+                        } : {}}
+                        onClick={() => toggleChartEventType(t.id)}
+                        title={`Toggle ${t.label.toLowerCase()} markers`}
+                      >
+                        <span
+                          className="event-toggle-dot"
+                          style={{ background: on ? t.color : "transparent",
+                                   borderColor: t.color }}
+                        />
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {data.price ? (
                 <>
@@ -205,6 +270,9 @@ export default function Dashboard() {
                     chartType={chartType}
                     fit={chartType === "line"}
                     intraday={intraday}
+                    events={allChartEvents}
+                    visibleEventTypes={chartEventTypes}
+                    onEventClick={setSelectedChartEvent}
                   />
                   <PeriodSummary
                     candles={data.price.candles}
@@ -270,8 +338,16 @@ export default function Dashboard() {
               </div>
             </div>
       )}
-      {tab === "events" && <div className="card placeholder">Earnings & macro events — coming soon.</div>}
+      {tab === "events" && <EventsList events={data.events} ticker={ticker} />}
       {tab === "notify" && <div className="card placeholder">Notification rules — coming soon.</div>}
+
+      {selectedChartEvent && (
+        <EventDetailModal
+          event={selectedChartEvent}
+          ticker={ticker}
+          onClose={() => setSelectedChartEvent(null)}
+        />
+      )}
     </>
   );
 }

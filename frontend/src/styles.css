@@ -630,6 +630,166 @@ a { color: inherit; text-decoration: none; }
 .loading-bar { color: #58a6ff; padding: 8px 12px; background: rgba(31, 111, 235, 0.1); border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
 .small { font-size: 11px; }
 
+/* Events tab */
+.events-card { margin-bottom: 16px; }
+.upcoming-card { border-left: 3px solid #58a6ff; }
+.events-list { display: flex; flex-direction: column; gap: 0; }
+.event-row {
+  display: grid;
+  grid-template-columns: 28px 110px 130px 1fr 16px;
+  align-items: center;
+  padding: 10px 6px;
+  border-bottom: 1px solid #21262d;
+  font-size: 13px;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.event-row:hover { background: rgba(88, 166, 255, 0.06); }
+.event-row:last-child { border-bottom: none; }
+.event-icon { font-size: 15px; text-align: center; }
+.event-date { color: #8b949e; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.event-type { font-weight: 500; }
+.event-detail { color: #c9d1d9; }
+.event-chev { color: #6e7681; font-size: 18px; line-height: 1; opacity: 0.6; }
+.event-row:hover .event-chev { color: #58a6ff; opacity: 1; }
+.show-more-btn {
+  margin-top: 12px;
+  background: none;
+  border: 1px solid #30363d;
+  color: #58a6ff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.show-more-btn:hover { background: rgba(88, 166, 255, 0.1); }
+
+/* Chart event overlay — dashed vertical lines drawn on top of the chart */
+.chart-wrap { position: relative; }
+.chart-event-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 56px;          /* leave the right price scale clear */
+  bottom: 28px;         /* leave the time axis clear */
+  pointer-events: none;
+  overflow: hidden;
+}
+.chart-event-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed #8b949e;
+  opacity: 0.55;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.chart-event-line:hover { opacity: 1; width: 2px; }
+
+/* Toggle buttons in chart-controls */
+.event-toggle-group { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.event-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid #30363d;
+  color: #6e7681;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.event-toggle-btn:hover { color: #c9d1d9; border-color: #484f58; }
+.event-toggle-btn.on { color: #c9d1d9; }
+.event-toggle-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+}
+
+/* Event detail modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  width: min(440px, 92vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  animation: modal-in 0.15s ease-out;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid #21262d;
+}
+.modal-icon { font-size: 22px; line-height: 1; }
+.modal-title { font-weight: 600; font-size: 15px; color: #f0f6fc; }
+.modal-subtitle { font-size: 12px; color: #8b949e; margin-top: 2px; }
+.modal-close {
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: #f0f6fc; }
+.modal-body { padding: 16px 18px; }
+.modal-stats { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.modal-stats > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid #21262d;
+}
+.modal-stats > div:last-child { border-bottom: none; }
+.modal-stats dt { color: #8b949e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.modal-stats dd { font-size: 16px; font-weight: 600; margin: 0; color: #c9d1d9; }
+.modal-note { color: #8b949e; font-size: 12px; line-height: 1.5; padding: 8px 0; }
+.modal-footer {
+  padding: 10px 18px;
+  border-top: 1px solid #21262d;
+  font-size: 11px;
+}
+.muted-inline { color: #6e7681; }
+
 /* News filter tabs */
 .news-filter { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
 

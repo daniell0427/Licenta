@@ -9,12 +9,13 @@ from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from . import market, sentiment, model as ml, news_feed, auth, schemas, news_repo
 from .db import Base, engine, get_db, SessionLocal
 from .models import (
     User, WatchlistItem, Cache, Notification,
-    NewsArticle, PriceBar, PredictionRecord,
+    NewsArticle, PriceBar, PredictionRecord, CorpEvent,
 )
 
 
@@ -54,6 +55,7 @@ TTL_BY_PREFIX = {
     "predict": 1800,     # 30 min — predictions are expensive
     "home": 120,         # 2 min for home dashboard
     "notif_scan": 120,   # last-scan timestamp per user
+    "events": 3600,      # 1 h — earnings/dividends/splits don't change minute-to-minute
 }
 
 # L1 in-memory cache (fast); L2 is the DB Cache table (persists across restarts).
@@ -388,7 +390,6 @@ def _persist_price_bars(db: Session, ticker: str, interval: str, candles: list):
     Uses INSERT OR IGNORE on (ticker, interval, bar_time) — duplicates skipped."""
     if not candles:
         return
-    from sqlalchemy.dialects.sqlite import insert as sqlite_insert
     rows = []
     for c in candles:
         rows.append({
@@ -524,6 +525,93 @@ def predict(ticker: str, db: Session = Depends(get_db)):
         db.rollback()
 
     return out
+
+
+def _events_from_db(db: Session, ticker: str):
+    """Return all CorpEvent rows for ticker, or None if the data is stale/missing."""
+    rows = (
+        db.query(CorpEvent)
+        .filter(CorpEvent.ticker == ticker)
+        .order_by(CorpEvent.ts.desc())
+        .all()
+    )
+    if not rows:
+        return None
+    # Refresh if oldest fetch is more than 12 h ago
+    oldest_fetch = min(r.fetched_at for r in rows if r.fetched_at)
+    if (datetime.now(timezone.utc).replace(tzinfo=None) - oldest_fetch).total_seconds() > 43200:
+        return None
+    return rows
+
+
+def _persist_events(db: Session, ticker: str, data: dict):
+    """Upsert every event into corp_events."""
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    all_events = data.get("past", []) + data.get("upcoming", [])
+    if not all_events:
+        return
+    rows = [
+        {
+            "ticker": ticker,
+            "event_type": ev["type"],
+            "event_date": ev["date"],
+            "ts": ev["ts"],
+            "label": ev.get("label", ""),
+            "value": ev.get("value"),
+            "eps_actual": ev.get("eps_actual"),
+            "eps_estimate": ev.get("eps_estimate"),
+            "fetched_at": now,
+        }
+        for ev in all_events
+    ]
+    try:
+        stmt = sqlite_insert(CorpEvent).values(rows).on_conflict_do_update(
+            index_elements=["ticker", "event_type", "event_date"],
+            set_={"value": sqlite_insert(CorpEvent).excluded.value,
+                  "eps_actual": sqlite_insert(CorpEvent).excluded.eps_actual,
+                  "eps_estimate": sqlite_insert(CorpEvent).excluded.eps_estimate,
+                  "fetched_at": sqlite_insert(CorpEvent).excluded.fetched_at},
+        )
+        db.execute(stmt)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"[events] persist failed for {ticker}: {e}")
+
+
+def _serialize_events(rows, ticker: str) -> dict:
+    now_ts = datetime.now(timezone.utc).timestamp()
+    past, upcoming = [], []
+    for r in rows:
+        ev = {
+            "date": r.event_date,
+            "ts": r.ts,
+            "type": r.event_type,
+            "label": r.label,
+            "value": r.value,
+            "eps_actual": r.eps_actual,
+            "eps_estimate": r.eps_estimate,
+        }
+        (upcoming if r.ts > now_ts else past).append(ev)
+    past.sort(key=lambda x: x["ts"], reverse=True)
+    upcoming.sort(key=lambda x: x["ts"])
+    return {"ticker": ticker, "past": past, "upcoming": upcoming}
+
+
+@app.get("/api/events/{ticker}")
+def events(ticker: str, db: Session = Depends(get_db)):
+    ticker = ticker.upper()
+    # Serve from DB if fresh enough
+    rows = _events_from_db(db, ticker)
+    if rows is not None:
+        return _serialize_events(rows, ticker)
+    # Live fetch → persist → serve
+    try:
+        data = market.fetch_events(ticker)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+    _persist_events(db, ticker, data)
+    return {"ticker": ticker, **data}
 
 
 # ---------- Home page ----------

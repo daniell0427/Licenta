@@ -33,10 +33,8 @@ def score_texts(texts: List[str]) -> List[Dict]:
         # FinBERT label order from config: positive, negative, neutral
         label = model.config.id2label[idx].lower()
         score = float(p[idx])
-        # Signed score: positive minus negative, useful as a feature
         signed = float(p[0] - p[1]) if model.config.id2label[0].lower() == "positive" else None
         if signed is None:
-            # Resolve dynamically
             id2 = {v.lower(): k for k, v in model.config.id2label.items()}
             signed = float(p[id2["positive"]] - p[id2["negative"]])
         out.append({"label": label, "confidence": score, "signed": signed})

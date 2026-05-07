@@ -3,12 +3,12 @@ uvicorn[standard]==0.30.6
 yfinance>=0.2.50
 curl_cffi==0.7.3
 pandas==2.2.3
-numpy==1.26.4
-torch==2.4.1
+numpy>=1.26.4
+torch==2.5.1
 transformers==4.45.2
 scikit-learn==1.5.2
 pydantic==2.9.2
-pydantic[email]==2.9.2
+email-validator==2.2.0
 python-dateutil==2.9.0
 ta==0.11.0
 feedparser==6.0.11

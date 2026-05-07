@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
+import io
+import re
 import pandas as pd
 import yfinance as yf
 from ta.momentum import RSIIndicator
@@ -516,6 +518,178 @@ def batch_quotes(tickers: List[str]) -> Dict[str, Dict]:
         if q is not None:
             out[t] = q
     return out
+
+
+def _parse_yahoo_earnings_date(s: str) -> Optional[datetime]:
+    """Yahoo earnings calendar date strings: 'Jan 28, 2025, 5 PMEST',
+    'Jan 28, 2025, Time Not Supplied', or 'Jan 28, 2025'."""
+    if not isinstance(s, str) or not s.strip():
+        return None
+    cleaned = re.sub(r",\s*\d+(?::\d+)?\s*[AP]M[A-Z]*\s*$", "", s).strip()
+    cleaned = re.sub(r",\s*Time\s*Not\s*Supplied\s*$", "", cleaned, flags=re.I).strip()
+    for fmt in ("%b %d, %Y", "%B %d, %Y"):
+        try:
+            return datetime.strptime(cleaned, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _fetch_earnings_yahoo_html(ticker: str, max_results: int = 200) -> List[Dict]:
+    """Fetch earnings from yfinance (works without curl_cffi session issues)."""
+    sym = ticker.upper()
+    out: List[Dict] = []
+    try:
+        t = _ticker(sym)
+        earnings_df = t.earnings_dates
+        if earnings_df is None or earnings_df.empty:
+            return []
+        for idx, row in earnings_df.iterrows():
+            if len(out) >= max_results:
+                break
+            try:
+                eps_estimate = row.get("EPS Estimate")
+                eps_actual = row.get("Reported EPS")
+                eps_estimate = float(eps_estimate) if pd.notna(eps_estimate) else None
+                eps_actual = float(eps_actual) if pd.notna(eps_actual) else None
+                ts = idx.timestamp()
+                out.append({
+                    "ts": ts,
+                    "date": idx.date().isoformat(),
+                    "eps_actual": eps_actual,
+                    "eps_estimate": eps_estimate,
+                })
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"[events] earnings fetch {sym}: {e}")
+    return out
+
+
+def fetch_events(ticker: str) -> Dict:
+    """Fetch earnings, earnings calls, dividends, and stock splits via direct
+    Yahoo Finance APIs. Returns {"past": [...], "upcoming": [...]}."""
+    sym = ticker.upper()
+    now = datetime.now(timezone.utc)
+    past: List[Dict] = []
+    upcoming: List[Dict] = []
+
+    if _SESSION is None:
+        return {"past": past, "upcoming": upcoming}
+
+    # ── Earnings: full historical + recent via HTML scrape ──────────────────────
+    seen_earn_dates = set()
+    try:
+        for item in _fetch_earnings_yahoo_html(sym, max_results=200):
+            if item["date"] in seen_earn_dates:
+                continue
+            seen_earn_dates.add(item["date"])
+            dt = datetime.fromtimestamp(item["ts"], tz=timezone.utc)
+            ev = {
+                "date": item["date"],
+                "ts": item["ts"],
+                "type": "earnings",
+                "label": "Earnings",
+                "eps_actual": item.get("eps_actual"),
+                "eps_estimate": item.get("eps_estimate"),
+            }
+            (upcoming if dt > now else past).append(ev)
+    except Exception as e:
+        print(f"[events] earnings scrape {sym}: {e}")
+
+    # ── Calendar events: upcoming earnings + earnings call ──────────────────────
+    try:
+        url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}"
+        r = _SESSION.get(url, params={"modules": "calendarEvents"}, timeout=12)
+        if r.status_code == 200:
+            result = ((r.json().get("quoteSummary") or {}).get("result") or [])
+            if result:
+                cal_earn = ((result[0].get("calendarEvents") or {}).get("earnings") or {})
+                # Upcoming earnings dates (in case scrape missed them)
+                for ed in (cal_earn.get("earningsDate") or []):
+                    ts = ed.get("raw")
+                    if not ts:
+                        continue
+                    dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+                    if dt.date().isoformat() in seen_earn_dates:
+                        continue
+                    seen_earn_dates.add(dt.date().isoformat())
+                    ev = {
+                        "date": dt.date().isoformat(),
+                        "ts": float(ts),
+                        "type": "earnings",
+                        "label": "Earnings",
+                        "eps_actual": None,
+                        "eps_estimate": None,
+                    }
+                    (upcoming if dt > now else past).append(ev)
+                # Earnings call date — distinct event if different from earnings date
+                for ed in (cal_earn.get("earningsCallDate") or []):
+                    ts = ed.get("raw")
+                    if not ts:
+                        continue
+                    dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+                    ev = {
+                        "date": dt.date().isoformat(),
+                        "ts": float(ts),
+                        "type": "earnings_call",
+                        "label": "Earnings Call",
+                        "eps_actual": None,
+                        "eps_estimate": None,
+                    }
+                    (upcoming if dt > now else past).append(ev)
+    except Exception as e:
+        print(f"[events] calendarEvents {sym}: {e}")
+
+    # ── Dividends + splits: chart API with events=div,splits ────────────────────
+    try:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}"
+        r = _SESSION.get(url, params={"range": "max", "interval": "1mo",
+                                       "events": "div,splits"}, timeout=15)
+        if r.status_code == 200:
+            result = ((r.json().get("chart") or {}).get("result") or [])
+            if result:
+                ev_data = result[0].get("events") or {}
+
+                for div in (ev_data.get("dividends") or {}).values():
+                    try:
+                        ts = float(div.get("date", 0))
+                        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                        past.append({
+                            "date": dt.date().isoformat(),
+                            "ts": ts,
+                            "type": "dividend",
+                            "label": "Dividend",
+                            "value": round(float(div.get("amount", 0)), 4),
+                            "eps_actual": None,
+                            "eps_estimate": None,
+                        })
+                    except Exception:
+                        pass
+
+                for split in (ev_data.get("splits") or {}).values():
+                    try:
+                        ts = float(split.get("date", 0))
+                        dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                        num = float(split.get("numerator", 1))
+                        den = float(split.get("denominator", 1))
+                        past.append({
+                            "date": dt.date().isoformat(),
+                            "ts": ts,
+                            "type": "split",
+                            "label": "Stock Split",
+                            "value": round(num / den, 4) if den else 1.0,
+                            "eps_actual": None,
+                            "eps_estimate": None,
+                        })
+                    except Exception:
+                        pass
+    except Exception as e:
+        print(f"[events] chart events {sym}: {e}")
+
+    past.sort(key=lambda x: x["ts"], reverse=True)
+    upcoming.sort(key=lambda x: x["ts"])
+    return {"past": past, "upcoming": upcoming}
 
 
 def quick_quote(ticker: str) -> Optional[Dict]:
