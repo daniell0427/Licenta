@@ -1,3 +1,27 @@
+/* Search bar in topbar */
+.topbar-search { flex: 1; max-width: 400px; position: relative; margin: 0 16px; }
+.topbar-search input { width: 100%; background: #1e1e2e; border: 1px solid #333; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; outline: none; box-sizing: border-box; }
+.topbar-search input:focus { border-color: #a78bfa; }
+.search-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #1a1a2e; border: 1px solid #333; border-radius: 6px; z-index: 200; max-height: 300px; overflow-y: auto; }
+.search-item { padding: 8px 12px; cursor: pointer; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #222; }
+.search-item:last-child { border-bottom: none; }
+.search-item:hover { background: #252540; }
+.search-ticker { font-weight: 700; color: #a78bfa; min-width: 60px; }
+.search-name { color: #aaa; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-sector { color: #666; font-size: 11px; margin-left: auto; white-space: nowrap; }
+.topbar-nav-link { color: #aaa; text-decoration: none; font-size: 14px; padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
+.topbar-nav-link:hover { color: #fff; background: #252540; }
+
+/* Sector filter buttons */
+.sector-btn { padding: 4px 12px; border-radius: 20px; border: 1px solid #333; background: transparent; color: #aaa; cursor: pointer; font-size: 12px; }
+.sector-btn:hover { border-color: #a78bfa; color: #a78bfa; }
+.sector-btn.active { background: #a78bfa; border-color: #a78bfa; color: #fff; }
+
+/* Secondary buttons (pagination etc.) */
+.btn-secondary { padding: 6px 14px; border-radius: 6px; border: 1px solid #333; background: transparent; color: #aaa; cursor: pointer; font-size: 13px; }
+.btn-secondary:hover:not(:disabled) { border-color: #a78bfa; color: #a78bfa; }
+.btn-secondary:disabled { opacity: 0.4; cursor: default; }
+
 /* Skeleton loading shimmer */
 @keyframes shimmer {
   0% { background-position: -400px 0; }

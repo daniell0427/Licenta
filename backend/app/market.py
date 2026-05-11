@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional
 import io
 import re
+import numpy as np
 import pandas as pd
 import yfinance as yf
 from ta.momentum import RSIIndicator
@@ -226,6 +227,23 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["bb_high"] = bb.bollinger_hband()
     out["bb_low"] = bb.bollinger_lband()
     out["ret_1d"] = out["close"].pct_change()
+
+    # ── Scale-invariant derived features ─────────────────────────────────────
+    # These are the features the model should actually train on. The raw
+    # columns above are kept for charts and backwards compatibility, but
+    # they're price/size dependent and aren't safe to use as ML features
+    # across tickers or across long time spans.
+    out["ret_5d"] = out["close"].pct_change(5)
+    out["ret_20d"] = out["close"].pct_change(20)
+    out["vol_20d"] = out["ret_1d"].rolling(20).std()
+    out["ema12_dev"] = out["ema_12"] / out["close"] - 1.0
+    out["ema26_dev"] = out["ema_26"] / out["close"] - 1.0
+    out["macd_norm"] = out["macd"] / out["close"]
+    out["macd_sig_norm"] = out["macd_signal"] / out["close"]
+    vol_avg = out["volume"].rolling(20).mean()
+    out["volume_rel"] = out["volume"] / vol_avg.replace(0, np.nan)
+    bb_range = (out["bb_high"] - out["bb_low"]).replace(0, np.nan)
+    out["bb_pct"] = (out["close"] - out["bb_low"]) / bb_range
     return out
 
 
@@ -706,3 +724,99 @@ def quick_quote(ticker: str) -> Optional[Dict]:
     prev = float(df[close_col].iloc[-2])
     change_pct = (last - prev) / prev * 100 if prev else 0.0
     return {"ticker": ticker.upper(), "price": last, "change_pct": change_pct}
+
+
+def add_macro_features(df: pd.DataFrame, years: int = 2) -> pd.DataFrame:
+    """Add VIX, yield spread and SPY 5d return to a single-ticker DataFrame.
+    Used at inference time to match the training feature set."""
+    period = f"{years}y"
+
+    def _grab(sym):
+        try:
+            h = fetch_history(sym, period=period, interval="1d")
+            if h.empty:
+                return pd.Series(dtype=float)
+            s = h["close"].copy()
+            idx = pd.to_datetime(s.index)
+            if idx.tz is not None:
+                idx = idx.tz_localize(None)
+            s.index = idx.normalize()
+            return s
+        except Exception:
+            return pd.Series(dtype=float)
+
+    vix = _grab("^VIX")
+    tnx = _grab("^TNX")
+    fvx = _grab("^FVX")
+    spy = _grab("SPY")
+
+    macro = pd.concat([vix.rename("vix"), tnx.rename("y10"),
+                       fvx.rename("y5"), spy.rename("spy_close")], axis=1).ffill()
+    macro["vix_ret_5d"] = macro["vix"].pct_change(5)
+    macro["yield_spread"] = macro["y10"] - macro["y5"]
+    macro["spy_ret_5d"] = macro["spy_close"].pct_change(5)
+    macro = macro[["vix", "vix_ret_5d", "yield_spread", "spy_ret_5d"]].dropna()
+
+    out = df.copy()
+    idx = pd.to_datetime(out.index)
+    if idx.tz is not None:
+        idx = idx.tz_localize(None)
+    out.index = idx.normalize()
+    out = out.join(macro, how="left").ffill()
+    return out
+
+
+def add_earnings_features(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+    """Add eps_surprise_pct / days_since_earn_norm / is_earnings_window to df.
+    Uses the same backward-join + decay logic as training. Used at inference time."""
+    import yfinance as yf
+
+    DECAY_DAYS = 90
+    WINDOW_DAYS = 7
+
+    df = df.copy()
+    idx = pd.to_datetime(df.index)
+    if idx.tz is not None:
+        idx = idx.tz_localize(None)
+    df.index = idx.normalize()
+
+    # defaults
+    df["eps_surprise_pct"] = 0.0
+    df["days_since_earn_norm"] = 1.0
+    df["is_earnings_window"] = 0.0
+
+    try:
+        ed = yf.Ticker(ticker).earnings_dates
+        if ed is None or len(ed) == 0:
+            return df
+        ed = ed.reset_index()
+        date_col = ed.columns[0]
+        ed["earn_date"] = pd.to_datetime(ed[date_col]).dt.tz_localize(None).dt.normalize()
+        if "Surprise(%)" in ed.columns:
+            ed["eps_surp"] = pd.to_numeric(ed["Surprise(%)"], errors="coerce").div(100.0)
+        elif "EPS Estimate" in ed.columns and "Reported EPS" in ed.columns:
+            est = pd.to_numeric(ed["EPS Estimate"], errors="coerce")
+            rep = pd.to_numeric(ed["Reported EPS"], errors="coerce")
+            ed["eps_surp"] = np.where(est.abs() > 0.01, (rep - est) / est.abs(), 0.0)
+        else:
+            return df
+        ed = ed.dropna(subset=["earn_date", "eps_surp"])
+        ed = ed.sort_values("earn_date")
+        earn_dates = ed["earn_date"].values
+        earn_surps = ed["eps_surp"].values
+
+        for i, d in enumerate(df.index):
+            past = earn_dates[earn_dates <= d]
+            if len(past) == 0:
+                continue
+            last_date = past[-1]
+            surp = earn_surps[earn_dates == last_date][0]
+            cal_days = int((d - last_date) / np.timedelta64(1, "D"))
+            weight = max(0.0, (DECAY_DAYS - max(cal_days, WINDOW_DAYS)) / (DECAY_DAYS - WINDOW_DAYS))
+            df.at[d, "eps_surprise_pct"] = float(np.clip(surp * weight, -2.0, 2.0))
+            df.at[d, "days_since_earn_norm"] = float(min(cal_days, DECAY_DAYS) / DECAY_DAYS)
+            df.at[d, "is_earnings_window"] = 1.0 if cal_days <= WINDOW_DAYS else 0.0
+    except Exception as e:
+        print(f"[earnings] {ticker}: {e}")
+
+    return df

@@ -11,6 +11,7 @@ import News from "./pages/News.jsx";
 import PredictionsPage from "./pages/PredictionsPage.jsx";
 import Settings from "./pages/Settings.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
+import StockBrowser from "./pages/StockBrowser.jsx";
 import "./styles.css";
 
 function Protected({ children }) {
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/ticker/:ticker" element={<Dashboard />} />
+            <Route path="/stocks" element={<StockBrowser />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

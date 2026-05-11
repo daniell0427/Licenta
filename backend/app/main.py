@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from . import market, sentiment, model as ml, news_feed, auth, schemas, news_repo
+from . import market, sentiment, model as ml, news_feed, auth, schemas, news_repo, ticker_meta
+ticker_meta.load()
 from .db import Base, engine, get_db, SessionLocal
 from .models import (
     User, WatchlistItem, Cache, Notification,
@@ -107,6 +108,23 @@ def _put(key: str, val, db: Optional[Session] = None):
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+# ---------- Ticker search & browser ----------
+
+@app.get("/api/search")
+def search_stocks(q: str = ""):
+    return {"results": ticker_meta.search(q, limit=15)}
+
+
+@app.get("/api/stocks")
+def list_stocks(sector: str = "", page: int = 1, limit: int = 50):
+    return ticker_meta.list_stocks(sector=sector, page=page, limit=limit)
+
+
+@app.get("/api/sectors")
+def get_sectors():
+    return {"sectors": ticker_meta.get_sectors()}
 
 
 # ---------- Auth ----------
@@ -499,8 +517,37 @@ def predict(ticker: str, db: Session = Depends(get_db)):
         sent_by_date = sentiment.aggregate_daily(
             [{"date": it["date"], "signed": it["signed"]} for it in news_items]
         )
+
+    # Add rolling sentiment features to df for inference
+    if sent_by_date:
+        import numpy as np
+        df_idx_str = df.index.strftime("%Y-%m-%d")
+        df["sentiment_mean"] = [sent_by_date.get(d, 0.0) for d in df_idx_str]
+        df["sentiment_std"] = 0.0  # not available for real-time; use neutral
+        df["log_news_count"] = [float(np.log1p(1) if sent_by_date.get(d) else 0.0) for d in df_idx_str]
+        df["has_news"] = [1.0 if sent_by_date.get(d) else 0.0 for d in df_idx_str]
+        sm = df["sentiment_mean"]
+        df["sentiment_5d_mean"] = sm.rolling(5, min_periods=1).mean().fillna(0.0)
+        sent_20d = sm.rolling(20, min_periods=5).mean().fillna(0.0)
+        df["sentiment_surge"] = (sm - sent_20d).fillna(0.0)
+    else:
+        for col in ["sentiment_mean", "sentiment_std", "log_news_count", "has_news",
+                    "sentiment_5d_mean", "sentiment_surge"]:
+            df[col] = 0.0
+
+    # Enrich with macro + earnings features to match the training feature set
+    df = market.add_macro_features(df)
+    df = market.add_earnings_features(df, ticker)
+    # Cross-sectional rank features: fill with 0.5 (neutral — we only have one ticker)
+    for xs_col in ["xs_rank_rsi_14", "xs_rank_ret_1d", "xs_rank_volume", "xs_rank_macd"]:
+        if xs_col not in df.columns:
+            df[xs_col] = 0.5
+
+    # Use the saved checkpoint if it exists (matches its trained horizon),
+    # else fall back to the on-the-fly fit per horizon.
+    pretrained = ml.predict_pretrained(df, sent_by_date)
     short_term = ml.train_and_predict(df, sent_by_date, horizon=1)
-    long_term = ml.train_and_predict(df, sent_by_date, horizon=5)
+    long_term = pretrained if pretrained else ml.train_and_predict(df, sent_by_date, horizon=5)
     out = {"ticker": ticker.upper(), "short_term": short_term, "long_term": long_term}
     _put(key, out, db)
 
@@ -513,9 +560,9 @@ def predict(ticker: str, db: Session = Depends(get_db)):
                 ticker=ticker.upper(),
                 horizon_days=int(horizon),
                 direction=p.get("direction", ""),
-                confidence=float(p.get("confidence", 0.0)),
-                train_acc=float(p.get("train_acc", 0.0)),
-                val_acc=float(p.get("val_acc", 0.0)),
+                confidence=float(p.get("predicted_return_pct", 0.0)),
+                train_acc=0.0,
+                val_acc=0.0,
                 sentiment_score=float(avg_sent),
                 last_close=last_close,
                 generated_at=datetime.utcnow(),

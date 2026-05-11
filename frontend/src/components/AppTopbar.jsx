@@ -34,6 +34,13 @@ export default function AppTopbar() {
   const notifRef = useRef(null);
   const acctRef = useRef(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchDrop, setShowSearchDrop] = useState(false);
+  const searchRef = useRef(null);
+  const searchDebounce = useRef(null);
+
   async function load() {
     try {
       const d = await api("/api/notifications");
@@ -55,10 +62,38 @@ export default function AppTopbar() {
     function onDoc(e) {
       if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false);
       if (acctRef.current && !acctRef.current.contains(e.target)) setShowAccount(false);
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearchDrop(false);
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
+
+  function onSearchChange(e) {
+    const q = e.target.value;
+    setSearchQuery(q);
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (q.length < 2) {
+      setSearchResults([]);
+      setShowSearchDrop(false);
+      return;
+    }
+    searchDebounce.current = setTimeout(async () => {
+      try {
+        const d = await api(`/api/search?q=${encodeURIComponent(q)}`);
+        setSearchResults(d.results || []);
+        setShowSearchDrop(true);
+      } catch {
+        setSearchResults([]);
+      }
+    }, 300);
+  }
+
+  function onSelectResult(ticker) {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchDrop(false);
+    nav(`/ticker/${ticker}`);
+  }
 
   async function markRead(id, e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -88,6 +123,35 @@ export default function AppTopbar() {
   return (
     <header className="app-topbar">
       <Link to="/" className="topbar-logo">📊 SentiTrade</Link>
+
+      <Link to="/stocks" className="topbar-nav-link">Browse</Link>
+
+      <div className="topbar-search" ref={searchRef}>
+        <input
+          type="text"
+          placeholder="Search stocks..."
+          value={searchQuery}
+          onChange={onSearchChange}
+          onFocus={() => { if (searchResults.length > 0) setShowSearchDrop(true); }}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {showSearchDrop && searchResults.length > 0 && (
+          <div className="search-dropdown">
+            {searchResults.map((r) => (
+              <div
+                key={r.ticker}
+                className="search-item"
+                onMouseDown={() => onSelectResult(r.ticker)}
+              >
+                <span className="search-ticker">{r.ticker}</span>
+                <span className="search-name">{r.name || ""}</span>
+                {r.sector && <span className="search-sector">{r.sector}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="topbar-right">
         <div className="topbar-popover-wrap" ref={notifRef}>

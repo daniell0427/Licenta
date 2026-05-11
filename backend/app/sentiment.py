@@ -1,14 +1,20 @@
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Dict
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-MODEL_NAME = "ProsusAI/finbert"
+# If FINBERT_PATH points at a fine-tuned checkpoint (or the default artifact
+# directory exists), load that. Otherwise fall back to the public FinBERT.
+_DEFAULT_FT = Path(__file__).resolve().parent.parent / "artifacts" / "finbert-ft"
+MODEL_NAME = os.environ.get("FINBERT_PATH") or (str(_DEFAULT_FT) if _DEFAULT_FT.exists() else "ProsusAI/finbert")
 LABELS = ["positive", "negative", "neutral"]
 
 
 @lru_cache(maxsize=1)
 def _load():
+    print(f"[sentiment] loading {MODEL_NAME}")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
     model.eval()
