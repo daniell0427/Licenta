@@ -1,0 +1,18 @@
+{
+  "_comment": "Phase 1.5 ticker basket. 13 tickers across 5 GICS sectors. coverage_tier is derived from FNSPID news density (avg articles/day, 2022+): high>=4, medium 3-4, low<3. The high/low spread is what gives coverage-density shrinkage something to do.",
+  "basket": [
+    {"ticker": "AAPL", "name": "Apple Inc.",            "sector": "Information Technology", "coverage_tier": "high",   "fnspid_avg_per_day": 14.6},
+    {"ticker": "NVDA", "name": "NVIDIA Corporation",     "sector": "Information Technology", "coverage_tier": "high",   "fnspid_avg_per_day": 5.9},
+    {"ticker": "ADBE", "name": "Adobe Inc.",             "sector": "Information Technology", "coverage_tier": "low",    "fnspid_avg_per_day": 2.7},
+    {"ticker": "XOM",  "name": "Exxon Mobil Corporation","sector": "Energy",                 "coverage_tier": "high",   "fnspid_avg_per_day": 4.9},
+    {"ticker": "CVX",  "name": "Chevron Corporation",    "sector": "Energy",                 "coverage_tier": "high",   "fnspid_avg_per_day": 4.1},
+    {"ticker": "EOG",  "name": "EOG Resources, Inc.",    "sector": "Energy",                 "coverage_tier": "low",    "fnspid_avg_per_day": 2.2},
+    {"ticker": "GS",   "name": "Goldman Sachs Group",    "sector": "Financials",             "coverage_tier": "high",   "fnspid_avg_per_day": 4.1},
+    {"ticker": "MS",   "name": "Morgan Stanley",         "sector": "Financials",             "coverage_tier": "medium", "fnspid_avg_per_day": 3.1},
+    {"ticker": "MRK",  "name": "Merck & Co., Inc.",      "sector": "Health Care",            "coverage_tier": "medium", "fnspid_avg_per_day": 3.2},
+    {"ticker": "ABBV", "name": "AbbVie Inc.",            "sector": "Health Care",            "coverage_tier": "low",    "fnspid_avg_per_day": 2.5},
+    {"ticker": "KO",   "name": "The Coca-Cola Company",  "sector": "Consumer Staples",       "coverage_tier": "medium", "fnspid_avg_per_day": 3.0},
+    {"ticker": "PEP",  "name": "PepsiCo, Inc.",          "sector": "Consumer Staples",       "coverage_tier": "low",    "fnspid_avg_per_day": 2.5},
+    {"ticker": "KMB",  "name": "Kimberly-Clark Corp.",   "sector": "Consumer Staples",       "coverage_tier": "low",    "fnspid_avg_per_day": 2.1}
+  ]
+}

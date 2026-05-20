@@ -83,7 +83,12 @@ class NewsArticle(Base):
     fetched_at = Column(DateTime, default=datetime.utcnow, index=True, nullable=False)
     sentiment_label = Column(String, default="")            # "positive" | "neutral" | "negative"
     sentiment_confidence = Column(Float, default=0.0)
-    sentiment_signed = Column(Float, default=0.0)            # P(pos) - P(neg)
+    sentiment_signed = Column(Float, default=0.0)            # P(pos) - P(neg), legacy combined score
+    # Phase 2.1 — dual headline/summary sentiment for narrative-consistency features.
+    headline_score = Column(Float, default=0.0)             # signed sentiment of the title alone
+    headline_confidence = Column(Float, default=0.0)        # max softmax prob for the title
+    summary_score = Column(Float, default=0.0)              # signed sentiment of the summary alone
+    summary_confidence = Column(Float, default=0.0)         # max softmax prob for the summary
     fingerprint = Column(String, nullable=False)             # dedup key
 
     __table_args__ = (
