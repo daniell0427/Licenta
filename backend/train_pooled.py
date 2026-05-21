@@ -71,9 +71,26 @@ def git_hash() -> str:
 # Data assembly
 # ---------------------------------------------------------------------------
 
-def build_panel(refresh: bool = False) -> pd.DataFrame:
+SENT_COLS = ["headline_sent", "summary_sent", "signed_div", "abs_div",
+             "cwd", "news_count", "prior"]
+
+
+def build_panel(refresh: bool = False, panel_path: str | None = None) -> pd.DataFrame:
     """Price panel (technical indicators) joined with daily sentiment features.
-    Indexed by (date, ticker). k-independent."""
+    Indexed by (date, ticker). k-independent.
+
+    panel_path: when given, load that pre-built price panel directly (e.g. a
+    503-ticker S&P 500 panel for the generalization study) instead of the
+    13-ticker basket. Sentiment columns are zero-filled — only E0 (technical
+    only) is meaningful on a universe without dual-scored news."""
+    if panel_path:
+        panel = pd.read_parquet(panel_path)
+        flat = panel.reset_index()
+        flat["date"] = pd.to_datetime(flat["date"]).dt.normalize()
+        for c in SENT_COLS:
+            flat[c] = 0.0
+        return flat.set_index(["date", "ticker"]).sort_index()
+
     panel = fetch_long_panel(load_basket(), PANEL_YEARS, cache_path=PANEL_CACHE, refresh=refresh)
     sent = pd.read_parquet(FEATURE_DATASET)
     sent["date"] = pd.to_datetime(sent["date"]).dt.normalize()
@@ -81,8 +98,7 @@ def build_panel(refresh: bool = False) -> pd.DataFrame:
     flat = panel.reset_index()
     flat["date"] = pd.to_datetime(flat["date"]).dt.normalize()
     merged = flat.merge(sent, on=["ticker", "date"], how="left")
-    for c in ["headline_sent", "summary_sent", "signed_div", "abs_div",
-              "cwd", "news_count", "prior"]:
+    for c in SENT_COLS:
         merged[c] = merged[c].fillna(0.0)
     return merged.set_index(["date", "ticker"]).sort_index()
 
@@ -271,16 +287,25 @@ def main():
     ap.add_argument("--seed", type=int, default=HP.seed)
     ap.add_argument("--k", type=float, default=config.CHOSEN_K, help="shrinkage strength (E7 only)")
     ap.add_argument("--refresh-panel", action="store_true")
+    ap.add_argument("--panel", default=None,
+                    help="path to a pre-built price panel (e.g. the S&P 500 generalization study)")
+    ap.add_argument("--label", default="",
+                    help="tag prefix to keep runs on different universes separate (e.g. sp500)")
     args = ap.parse_args()
+
+    if args.panel and args.condition != "E0":
+        print(f"[warn] --panel has no dual-scored news; condition {args.condition} "
+              f"would see all-zero sentiment. Only E0 is meaningful here.")
 
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tag = f"{args.target}_{args.condition}_h{args.horizon}_s{args.seed}"
+    prefix = f"{args.label}_" if args.label else ""
+    tag = f"{prefix}{args.target}_{args.condition}_h{args.horizon}_s{args.seed}"
     if args.condition == "E7":
         tag += f"_k{args.k:g}"
     print(f"=== run {tag} | device={device} ===")
 
-    panel = materialize_sentiment(build_panel(refresh=args.refresh_panel), args.k)
+    panel = materialize_sentiment(build_panel(refresh=args.refresh_panel, panel_path=args.panel), args.k)
     Xt, Xs, y, dates, tickers = build_all_samples(
         panel, args.condition, args.horizon, HP.window, args.target)
     n_sent = len(config.SENTIMENT_FEATURE_SETS[args.condition])
