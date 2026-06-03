@@ -6,6 +6,9 @@ frontend/node_modules/
 frontend/dist/
 .DS_Store
 .claude/
+backend/artifacts/*.parquet
+backend/artifacts/*.pt
+backend/artifacts/*.pkl
 
 # Thesis run logs (regenerable)
 backend/artifacts/*.txt

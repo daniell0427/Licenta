@@ -1,0 +1,1647 @@
+(.venv) daniel@pop-os:~/dev/university/licenta/backend$ for H in 1 5 21 252; do
+  for F in technical sentiment both; do
+    case $F in
+      technical) T=tech ;;
+      sentiment) T=sent ;;
+      both)      T=both ;;
+    esac
+    echo ""
+    echo "=================================================="
+    echo "  Training sp500  horizon=$H  features=$F"
+    echo "=================================================="
+    python train_price.py \
+      --tickers sp500.txt \
+      --years 10 \
+      --horizon $H \
+      --features $F \
+      --tag _sp500_$T \
+      --sentiment-path artifacts/sp500_sentiment_daily.parquet
+donene
+
+==================================================
+  Training sp500  horizon=1  features=technical
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 1 trading days (1-day) — artifacts tagged _h1
+  [25/503] fetched (skipped 0)
+  [50/503] fetched (skipped 0)
+  [75/503] fetched (skipped 0)
+  [100/503] fetched (skipped 0)
+  [125/503] fetched (skipped 0)
+  [150/503] fetched (skipped 0)
+  [175/503] fetched (skipped 0)
+  [200/503] fetched (skipped 0)
+  [225/503] fetched (skipped 0)
+  [250/503] fetched (skipped 0)
+  [275/503] fetched (skipped 0)
+  [300/503] fetched (skipped 0)
+  [325/503] fetched (skipped 0)
+  [350/503] fetched (skipped 0)
+  [375/503] fetched (skipped 0)
+  [400/503] fetched (skipped 0)
+  [425/503] fetched (skipped 0)
+  [450/503] fetched (skipped 0)
+  [475/503] fetched (skipped 0)
+  [500/503] fetched (skipped 0)
+  [503/503] fetched (skipped 0)
+Cached panel to artifacts/panel_sp500.txt_10y.parquet
+  panel ready in 80s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=technical  tag=_sp500_tech
+Features (22): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=1d, window=20d, label=absolute
+  1,204,409 samples, stride=1  (positive return rate: 0.523)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165316  (2016-08-05 → 2017-12-22)
+  val:     35423  (2017-12-22 → 2018-04-13)
+  test:   200734  (2018-04-13 → 2019-12-10)
+  ep   1*  loss=0.00037  tr_dir=0.5300  va_dir=0.5264  va_mae=1.276%
+  ep   2   loss=0.00008  tr_dir=0.5299  va_dir=0.5265  va_mae=1.276%
+  ep   3*  loss=0.00008  tr_dir=0.5299  va_dir=0.5265  va_mae=1.272%
+  ep   4*  loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.269%
+  ep   5   loss=0.00008  tr_dir=0.5300  va_dir=0.5267  va_mae=1.299%
+  ep   6   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.420%
+  ep   7   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.687%
+  ep   8   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.949%
+  ep   9   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=2.437%
+  early stop at epoch 9 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5348  mae=1.175%  baseline_mae=1.179%
+  fold 1  selective dir_acc: @5%=0.5567  @10%=0.5541  @25%=0.5531  @50%=0.5503  @100%=0.5348
+  [ckpt] fold 1 saved → price_model_h1_sp500_tech_fold1.pt
+
+--- Fold 2/5 ---
+  train:  366050  (2016-08-05 → 2019-08-27)
+  val:     35423  (2019-08-27 → 2019-12-10)
+  test:   200734  (2019-12-10 → 2021-07-29)
+  ep   1*  loss=0.00014  tr_dir=0.5306  va_dir=0.5474  va_mae=1.098%
+  ep   2   loss=0.00010  tr_dir=0.4743  va_dir=0.4528  va_mae=1.110%
+  ep   3   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.101%
+  ep   4   loss=0.00010  tr_dir=0.4828  va_dir=0.4527  va_mae=1.108%
+  ep   5   loss=0.00010  tr_dir=0.4920  va_dir=0.4546  va_mae=1.107%
+  ep   6   loss=0.00010  tr_dir=0.4979  va_dir=0.4527  va_mae=1.110%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5284  mae=1.837%  baseline_mae=1.841%
+  fold 2  selective dir_acc: @5%=0.5190  @10%=0.5259  @25%=0.5296  @50%=0.5326  @100%=0.5284
+  [ckpt] fold 2 saved → price_model_h1_sp500_tech_fold2.pt
+
+--- Fold 3/5 ---
+  train:  566784  (2016-08-05 → 2021-04-16)
+  val:     35423  (2021-04-16 → 2021-07-29)
+  test:   200734  (2021-07-29 → 2023-03-09)
+  ep   1*  loss=0.00023  tr_dir=0.5356  va_dir=0.5257  va_mae=1.185%
+  ep   2*  loss=0.00014  tr_dir=0.5394  va_dir=0.5260  va_mae=1.184%
+  ep   3   loss=0.00014  tr_dir=0.5418  va_dir=0.5260  va_mae=1.189%
+  ep   4   loss=0.00013  tr_dir=0.4958  va_dir=0.4793  va_mae=1.190%
+  ep   5*  loss=0.00013  tr_dir=0.5453  va_dir=0.5260  va_mae=1.184%
+  ep   6   loss=0.00013  tr_dir=0.5498  va_dir=0.5260  va_mae=1.189%
+  ep   7   loss=0.00013  tr_dir=0.5517  va_dir=0.5258  va_mae=1.185%
+  ep   8*  loss=0.00013  tr_dir=0.5532  va_dir=0.5273  va_mae=1.182%
+  ep   9*  loss=0.00013  tr_dir=0.5574  va_dir=0.5462  va_mae=1.170%
+  ep  10   loss=0.00012  tr_dir=0.5620  va_dir=0.5382  va_mae=1.176%
+  ep  11   loss=0.00012  tr_dir=0.5628  va_dir=0.5388  va_mae=1.174%
+  ep  12   loss=0.00012  tr_dir=0.5187  va_dir=0.5096  va_mae=1.192%
+  ep  13   loss=0.00012  tr_dir=0.5703  va_dir=0.5320  va_mae=1.187%
+  ep  14   loss=0.00012  tr_dir=0.5705  va_dir=0.5344  va_mae=1.182%
+  early stop at epoch 14 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.4980  mae=1.592%  baseline_mae=1.574%
+  fold 3  selective dir_acc: @5%=0.5266  @10%=0.5630  @25%=0.4752  @50%=0.5027  @100%=0.4980
+  [ckpt] fold 3 saved → price_model_h1_sp500_tech_fold3.pt
+
+--- Fold 4/5 ---
+  train:  767518  (2016-08-05 → 2022-11-23)
+  val:     35423  (2022-11-23 → 2023-03-09)
+  test:   200734  (2023-03-09 → 2024-10-15)
+  ep   1*  loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.408%
+  ep   2   loss=0.00015  tr_dir=0.5277  va_dir=0.4856  va_mae=1.409%
+  ep   3   loss=0.00015  tr_dir=0.5326  va_dir=0.4855  va_mae=1.414%
+  ep   4*  loss=0.00014  tr_dir=0.5024  va_dir=0.5145  va_mae=1.405%
+  ep   5   loss=0.00014  tr_dir=0.5389  va_dir=0.4854  va_mae=1.405%
+  ep   6   loss=0.00014  tr_dir=0.5505  va_dir=0.4844  va_mae=1.409%
+  ep   7   loss=0.00014  tr_dir=0.5630  va_dir=0.4808  va_mae=1.416%
+  ep   8   loss=0.00013  tr_dir=0.5702  va_dir=0.4716  va_mae=1.428%
+  ep   9   loss=0.00013  tr_dir=0.5771  va_dir=0.4621  va_mae=1.483%
+  early stop at epoch 9 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.4690  mae=1.242%  baseline_mae=1.231%
+  fold 4  selective dir_acc: @5%=0.5691  @10%=0.4879  @25%=0.4706  @50%=0.4671  @100%=0.4690
+  [ckpt] fold 4 saved → price_model_h1_sp500_tech_fold4.pt
+
+--- Fold 5/5 ---
+  train:  968252  (2016-08-05 → 2024-07-05)
+  val:     35423  (2024-07-05 → 2024-10-15)
+  test:   200734  (2024-10-15 → 2026-05-20)
+  ep   1*  loss=0.00016  tr_dir=0.4793  va_dir=0.4381  va_mae=1.308%
+  ep   2*  loss=0.00014  tr_dir=0.4890  va_dir=0.4383  va_mae=1.304%
+  ep   3*  loss=0.00014  tr_dir=0.5300  va_dir=0.5617  va_mae=1.296%
+  ep   4   loss=0.00014  tr_dir=0.5350  va_dir=0.5507  va_mae=1.315%
+  ep   5   loss=0.00013  tr_dir=0.5378  va_dir=0.5505  va_mae=1.351%
+  ep   6   loss=0.00013  tr_dir=0.5437  va_dir=0.5513  va_mae=1.336%
+  ep   7   loss=0.00013  tr_dir=0.5514  va_dir=0.5550  va_mae=1.339%
+  ep   8   loss=0.00013  tr_dir=0.5594  va_dir=0.5559  va_mae=1.351%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5147  mae=1.459%  baseline_mae=1.469%
+  fold 5  selective dir_acc: @5%=0.6050  @10%=0.5416  @25%=0.5288  @50%=0.5140  @100%=0.5147
+  [ckpt] fold 5 saved → price_model_h1_sp500_tech_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5090 ± 0.0236  (per fold: ['0.5348', '0.5284', '0.4980', '0.4690', '0.5147'])
+Test MAE:       1.461% ± 0.240%
+Baseline MAE:   1.459% ± 0.241%  (always-predict-zero)
+MAE vs baseline:+0.002pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5553 ± 0.0310   per fold: ['0.5567', '0.5190', '0.5266', '0.5691', '0.6050']
+  cov= 10%   mean=0.5345 ± 0.0264   per fold: ['0.5541', '0.5259', '0.5630', '0.4879', '0.5416']
+  cov= 25%   mean=0.5115 ± 0.0327   per fold: ['0.5531', '0.5296', '0.4752', '0.4706', '0.5288']
+  cov= 50%   mean=0.5133 ± 0.0282   per fold: ['0.5503', '0.5326', '0.5027', '0.4671', '0.5140']
+  cov=100%   mean=0.5090 ± 0.0236   per fold: ['0.5348', '0.5284', '0.4980', '0.4690', '0.5147']
+
+Saved:
+  artifacts/price_model_h1_sp500_tech.pt
+  artifacts/price_scaler_h1_sp500_tech.pkl
+  artifacts/price_meta_h1_sp500_tech.json
+
+==================================================
+  Training sp500  horizon=1  features=sentiment
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 1 trading days (1-day) — artifacts tagged _h1
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+[ablation] features mode=sentiment  tag=_sp500_sent
+Features (6): ['sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge']
+Building windows — horizon=1d, window=20d, label=absolute
+  1,204,409 samples, stride=1  (positive return rate: 0.523)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165316  (2016-08-05 → 2017-12-22)
+  val:     35423  (2017-12-22 → 2018-04-13)
+  test:   200734  (2018-04-13 → 2019-12-10)
+  ep   1*  loss=0.00038  tr_dir=0.5299  va_dir=0.5266  va_mae=1.275%
+  ep   2   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.275%
+  ep   3   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.276%
+  ep   4   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.277%
+  ep   5   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.275%
+  ep   6   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.275%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5349  mae=1.175%  baseline_mae=1.179%
+  fold 1  selective dir_acc: @5%=0.5386  @10%=0.5369  @25%=0.5326  @50%=0.5367  @100%=0.5349
+  [ckpt] fold 1 saved → price_model_h1_sp500_sent_fold1.pt
+
+--- Fold 2/5 ---
+  train:  366050  (2016-08-05 → 2019-08-27)
+  val:     35423  (2019-08-27 → 2019-12-10)
+  test:   200734  (2019-12-10 → 2021-07-29)
+  ep   1*  loss=0.00021  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   2   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.102%
+  ep   3   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.100%
+  ep   4   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   5   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   6   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5284  mae=1.838%  baseline_mae=1.841%
+  fold 2  selective dir_acc: @5%=0.5076  @10%=0.5132  @25%=0.5150  @50%=0.5200  @100%=0.5284
+  [ckpt] fold 2 saved → price_model_h1_sp500_sent_fold2.pt
+
+--- Fold 3/5 ---
+  train:  566784  (2016-08-05 → 2021-04-16)
+  val:     35423  (2021-04-16 → 2021-07-29)
+  test:   200734  (2021-07-29 → 2023-03-09)
+  ep   1*  loss=0.00015  tr_dir=0.5311  va_dir=0.5260  va_mae=1.187%
+  ep   2*  loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.184%
+  ep   3   loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.185%
+  ep   4   loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.186%
+  ep   5   loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.188%
+  ep   6   loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.187%
+  ep   7   loss=0.00014  tr_dir=0.5311  va_dir=0.5260  va_mae=1.184%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5013  mae=1.575%  baseline_mae=1.574%
+  fold 3  selective dir_acc: @5%=0.5363  @10%=0.5041  @25%=0.5159  @50%=0.5017  @100%=0.5013
+  [ckpt] fold 3 saved → price_model_h1_sp500_sent_fold3.pt
+
+--- Fold 4/5 ---
+  train:  767518  (2016-08-05 → 2022-11-23)
+  val:     35423  (2022-11-23 → 2023-03-09)
+  test:   200734  (2023-03-09 → 2024-10-15)
+  ep   1*  loss=0.00016  tr_dir=0.5252  va_dir=0.4856  va_mae=1.411%
+  ep   2*  loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.407%
+  ep   3   loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.407%
+  ep   4   loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.410%
+  ep   5   loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.409%
+  ep   6   loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.425%
+  ep   7   loss=0.00015  tr_dir=0.5252  va_dir=0.4856  va_mae=1.428%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5314  mae=1.228%  baseline_mae=1.231%
+  fold 4  selective dir_acc: @5%=0.5661  @10%=0.5392  @25%=0.5329  @50%=0.5286  @100%=0.5314
+  [ckpt] fold 4 saved → price_model_h1_sp500_sent_fold4.pt
+
+--- Fold 5/5 ---
+  train:  968252  (2016-08-05 → 2024-07-05)
+  val:     35423  (2024-07-05 → 2024-10-15)
+  test:   200734  (2024-10-15 → 2026-05-20)
+  ep   1*  loss=0.00015  tr_dir=0.4763  va_dir=0.4379  va_mae=1.309%
+  ep   2*  loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.296%
+  ep   3   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.300%
+  ep   4   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.300%
+  ep   5*  loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.294%
+  ep   6   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.296%
+  ep   7*  loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.291%
+  ep   8   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.294%
+  ep   9   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.294%
+  ep  10   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.294%
+  ep  11*  loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.290%
+  ep  12   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.298%
+  ep  13   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.299%
+  ep  14   loss=0.00014  tr_dir=0.4763  va_dir=0.4379  va_mae=1.306%
+  ep  15   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.291%
+  ep  16   loss=0.00014  tr_dir=0.5237  va_dir=0.5621  va_mae=1.299%
+  early stop at epoch 16 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5140  mae=1.472%  baseline_mae=1.469%
+  fold 5  selective dir_acc: @5%=0.5024  @10%=0.5029  @25%=0.4969  @50%=0.5150  @100%=0.5140
+  [ckpt] fold 5 saved → price_model_h1_sp500_sent_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5220 ± 0.0125  (per fold: ['0.5349', '0.5284', '0.5013', '0.5314', '0.5140'])
+Test MAE:       1.458% ± 0.241%
+Baseline MAE:   1.459% ± 0.241%  (always-predict-zero)
+MAE vs baseline:-0.001pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5302 ± 0.0231   per fold: ['0.5386', '0.5076', '0.5363', '0.5661', '0.5024']
+  cov= 10%   mean=0.5193 ± 0.0158   per fold: ['0.5369', '0.5132', '0.5041', '0.5392', '0.5029']
+  cov= 25%   mean=0.5187 ± 0.0133   per fold: ['0.5326', '0.5150', '0.5159', '0.5329', '0.4969']
+  cov= 50%   mean=0.5204 ± 0.0120   per fold: ['0.5367', '0.5200', '0.5017', '0.5286', '0.5150']
+  cov=100%   mean=0.5220 ± 0.0125   per fold: ['0.5349', '0.5284', '0.5013', '0.5314', '0.5140']
+
+Saved:
+  artifacts/price_model_h1_sp500_sent.pt
+  artifacts/price_scaler_h1_sp500_sent.pkl
+  artifacts/price_meta_h1_sp500_sent.json
+
+==================================================
+  Training sp500  horizon=1  features=both
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 1 trading days (1-day) — artifacts tagged _h1
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=both  tag=_sp500_both
+Features (28): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=1d, window=20d, label=absolute
+  1,204,409 samples, stride=1  (positive return rate: 0.523)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165316  (2016-08-05 → 2017-12-22)
+  val:     35423  (2017-12-22 → 2018-04-13)
+  test:   200734  (2018-04-13 → 2019-12-10)
+  ep   1*  loss=0.00013  tr_dir=0.5299  va_dir=0.5266  va_mae=1.276%
+  ep   2   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.276%
+  ep   3*  loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.274%
+  ep   4   loss=0.00008  tr_dir=0.4777  va_dir=0.5387  va_mae=1.276%
+  ep   5*  loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.266%
+  ep   6   loss=0.00008  tr_dir=0.4952  va_dir=0.5053  va_mae=1.269%
+  ep   7   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.284%
+  ep   8   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.285%
+  ep   9   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.274%
+  ep  10   loss=0.00008  tr_dir=0.5299  va_dir=0.5266  va_mae=1.286%
+  early stop at epoch 10 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5348  mae=1.174%  baseline_mae=1.179%
+  fold 1  selective dir_acc: @5%=0.5693  @10%=0.5653  @25%=0.5410  @50%=0.5374  @100%=0.5348
+  [ckpt] fold 1 saved → price_model_h1_sp500_both_fold1.pt
+
+--- Fold 2/5 ---
+  train:  366050  (2016-08-05 → 2019-08-27)
+  val:     35423  (2019-08-27 → 2019-12-10)
+  test:   200734  (2019-12-10 → 2021-07-29)
+  ep   1*  loss=0.00017  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   2   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   3   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.101%
+  ep   4   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   5   loss=0.00010  tr_dir=0.5306  va_dir=0.5474  va_mae=1.099%
+  ep   6*  loss=0.00010  tr_dir=0.5313  va_dir=0.5474  va_mae=1.098%
+  ep   7   loss=0.00010  tr_dir=0.5332  va_dir=0.5474  va_mae=1.099%
+  ep   8   loss=0.00010  tr_dir=0.5055  va_dir=0.4662  va_mae=1.108%
+  ep   9   loss=0.00009  tr_dir=0.5473  va_dir=0.5177  va_mae=1.108%
+  ep  10   loss=0.00009  tr_dir=0.5564  va_dir=0.5129  va_mae=1.123%
+  ep  11   loss=0.00009  tr_dir=0.5615  va_dir=0.5166  va_mae=1.127%
+  early stop at epoch 11 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5290  mae=1.944%  baseline_mae=1.841%
+  fold 2  selective dir_acc: @5%=0.6004  @10%=0.5791  @25%=0.5412  @50%=0.5320  @100%=0.5290
+  [ckpt] fold 2 saved → price_model_h1_sp500_both_fold2.pt
+
+--- Fold 3/5 ---
+  train:  566784  (2016-08-05 → 2021-04-16)
+  val:     35423  (2021-04-16 → 2021-07-29)
+  test:   200734  (2021-07-29 → 2023-03-09)
+  ep   1*  loss=0.00022  tr_dir=0.5334  va_dir=0.5260  va_mae=1.184%
+  ep   2   loss=0.00014  tr_dir=0.5391  va_dir=0.5260  va_mae=1.189%
+  ep   3*  loss=0.00014  tr_dir=0.5416  va_dir=0.5260  va_mae=1.183%
+  ep   4   loss=0.00013  tr_dir=0.5438  va_dir=0.5260  va_mae=1.188%
+  ep   5   loss=0.00013  tr_dir=0.5481  va_dir=0.5260  va_mae=1.186%
+  ep   6   loss=0.00013  tr_dir=0.5516  va_dir=0.5260  va_mae=1.190%
+  ep   7   loss=0.00013  tr_dir=0.5597  va_dir=0.5114  va_mae=1.188%
+  ep   8*  loss=0.00013  tr_dir=0.5633  va_dir=0.5217  va_mae=1.183%
+  ep   9*  loss=0.00012  tr_dir=0.5669  va_dir=0.5245  va_mae=1.181%
+  ep  10*  loss=0.00012  tr_dir=0.5275  va_dir=0.4963  va_mae=1.180%
+  ep  11*  loss=0.00012  tr_dir=0.5712  va_dir=0.5325  va_mae=1.172%
+  ep  12   loss=0.00012  tr_dir=0.5755  va_dir=0.5189  va_mae=1.178%
+  ep  13   loss=0.00012  tr_dir=0.5784  va_dir=0.5167  va_mae=1.179%
+  ep  14   loss=0.00012  tr_dir=0.5853  va_dir=0.5177  va_mae=1.173%
+  ep  15   loss=0.00012  tr_dir=0.5851  va_dir=0.5229  va_mae=1.176%
+  ep  16   loss=0.00012  tr_dir=0.5597  va_dir=0.5254  va_mae=1.177%
+  early stop at epoch 16 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5004  mae=1.662%  baseline_mae=1.574%
+  fold 3  selective dir_acc: @5%=0.4781  @10%=0.5110  @25%=0.5249  @50%=0.5125  @100%=0.5004
+  [ckpt] fold 3 saved → price_model_h1_sp500_both_fold3.pt
+
+--- Fold 4/5 ---
+  train:  767518  (2016-08-05 → 2022-11-23)
+  val:     35423  (2022-11-23 → 2023-03-09)
+  test:   200734  (2023-03-09 → 2024-10-15)
+  ep   1*  loss=0.00021  tr_dir=0.5252  va_dir=0.4866  va_mae=1.406%
+  ep   2   loss=0.00015  tr_dir=0.5300  va_dir=0.4856  va_mae=1.414%
+  ep   3   loss=0.00014  tr_dir=0.5342  va_dir=0.4856  va_mae=1.406%
+  ep   4   loss=0.00014  tr_dir=0.5407  va_dir=0.4859  va_mae=1.408%
+  ep   5   loss=0.00014  tr_dir=0.5462  va_dir=0.4857  va_mae=1.406%
+  ep   6*  loss=0.00014  tr_dir=0.5529  va_dir=0.4869  va_mae=1.405%
+  ep   7   loss=0.00013  tr_dir=0.5686  va_dir=0.4668  va_mae=1.412%
+  ep   8   loss=0.00013  tr_dir=0.5791  va_dir=0.4821  va_mae=1.422%
+  ep   9   loss=0.00013  tr_dir=0.5895  va_dir=0.4792  va_mae=1.463%
+  ep  10   loss=0.00013  tr_dir=0.5952  va_dir=0.4859  va_mae=1.448%
+  ep  11   loss=0.00012  tr_dir=0.6030  va_dir=0.4640  va_mae=1.450%
+  early stop at epoch 11 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5263  mae=1.236%  baseline_mae=1.231%
+  fold 4  selective dir_acc: @5%=0.4631  @10%=0.5213  @25%=0.5293  @50%=0.5273  @100%=0.5263
+  [ckpt] fold 4 saved → price_model_h1_sp500_both_fold4.pt
+
+--- Fold 5/5 ---
+  train:  968252  (2016-08-05 → 2024-07-05)
+  val:     35423  (2024-07-05 → 2024-10-15)
+  test:   200734  (2024-10-15 → 2026-05-20)
+  ep   1*  loss=0.00015  tr_dir=0.5237  va_dir=0.5621  va_mae=1.294%
+  ep   2*  loss=0.00014  tr_dir=0.5269  va_dir=0.5621  va_mae=1.292%
+  ep   3*  loss=0.00014  tr_dir=0.5296  va_dir=0.5621  va_mae=1.292%
+  ep   4   loss=0.00014  tr_dir=0.5312  va_dir=0.5621  va_mae=1.293%
+  ep   5   loss=0.00014  tr_dir=0.4987  va_dir=0.4382  va_mae=1.332%
+  ep   6   loss=0.00014  tr_dir=0.5028  va_dir=0.4388  va_mae=1.310%
+  ep   7   loss=0.00013  tr_dir=0.5450  va_dir=0.5554  va_mae=1.305%
+  ep   8   loss=0.00013  tr_dir=0.5155  va_dir=0.4423  va_mae=1.328%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5145  mae=1.461%  baseline_mae=1.469%
+  fold 5  selective dir_acc: @5%=0.5693  @10%=0.5205  @25%=0.5276  @50%=0.5203  @100%=0.5145
+  [ckpt] fold 5 saved → price_model_h1_sp500_both_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5210 ± 0.0122  (per fold: ['0.5348', '0.5290', '0.5004', '0.5263', '0.5145'])
+Test MAE:       1.495% ± 0.283%
+Baseline MAE:   1.459% ± 0.241%  (always-predict-zero)
+MAE vs baseline:+0.037pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5360 ± 0.0548   per fold: ['0.5693', '0.6004', '0.4781', '0.4631', '0.5693']
+  cov= 10%   mean=0.5394 ± 0.0273   per fold: ['0.5653', '0.5791', '0.5110', '0.5213', '0.5205']
+  cov= 25%   mean=0.5328 ± 0.0069   per fold: ['0.5410', '0.5412', '0.5249', '0.5293', '0.5276']
+  cov= 50%   mean=0.5259 ± 0.0087   per fold: ['0.5374', '0.5320', '0.5125', '0.5273', '0.5203']
+  cov=100%   mean=0.5210 ± 0.0122   per fold: ['0.5348', '0.5290', '0.5004', '0.5263', '0.5145']
+
+Saved:
+  artifacts/price_model_h1_sp500_both.pt
+  artifacts/price_scaler_h1_sp500_both.pkl
+  artifacts/price_meta_h1_sp500_both.json
+
+==================================================
+  Training sp500  horizon=5  features=technical
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 5 trading days (1-week) — artifacts tagged _h5
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=technical  tag=_sp500_tech
+Features (22): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=5d, window=20d, label=absolute
+  1,202,397 samples, stride=1  (positive return rate: 0.546)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165038  (2016-08-05 → 2017-12-22)
+  val:     35364  (2017-12-22 → 2018-04-12)
+  test:   200399  (2018-04-12 → 2019-12-09)
+  ep   1*  loss=0.00053  tr_dir=0.5650  va_dir=0.5461  va_mae=2.804%
+  ep   2   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.820%
+  ep   3   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.809%
+  ep   4*  loss=0.00027  tr_dir=0.5651  va_dir=0.5461  va_mae=2.794%
+  ep   5   loss=0.00027  tr_dir=0.5851  va_dir=0.5274  va_mae=2.877%
+  ep   6   loss=0.00027  tr_dir=0.5971  va_dir=0.5311  va_mae=3.059%
+  ep   7   loss=0.00026  tr_dir=0.6054  va_dir=0.5332  va_mae=3.048%
+  ep   8   loss=0.00026  tr_dir=0.6179  va_dir=0.5377  va_mae=2.938%
+  ep   9   loss=0.00026  tr_dir=0.6224  va_dir=0.5366  va_mae=2.922%
+  early stop at epoch 9 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5584  mae=2.772%  baseline_mae=2.792%
+  fold 1  selective dir_acc: @5%=0.5088  @10%=0.5154  @25%=0.5347  @50%=0.5436  @100%=0.5584
+  [ckpt] fold 1 saved → price_model_h5_sp500_tech_fold1.pt
+
+--- Fold 2/5 ---
+  train:  365437  (2016-08-05 → 2019-08-26)
+  val:     35364  (2019-08-26 → 2019-12-09)
+  test:   200399  (2019-12-09 → 2021-07-27)
+  ep   1*  loss=0.00039  tr_dir=0.5582  va_dir=0.5805  va_mae=2.589%
+  ep   2   loss=0.00034  tr_dir=0.5664  va_dir=0.5778  va_mae=2.590%
+  ep   3*  loss=0.00033  tr_dir=0.5928  va_dir=0.5618  va_mae=2.576%
+  ep   4   loss=0.00032  tr_dir=0.6058  va_dir=0.5519  va_mae=2.580%
+  ep   5   loss=0.00032  tr_dir=0.6104  va_dir=0.5381  va_mae=2.627%
+  ep   6   loss=0.00031  tr_dir=0.6131  va_dir=0.5317  va_mae=2.643%
+  ep   7   loss=0.00031  tr_dir=0.6166  va_dir=0.5128  va_mae=2.732%
+  ep   8   loss=0.00031  tr_dir=0.6174  va_dir=0.5342  va_mae=2.744%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5668  mae=4.215%  baseline_mae=4.040%
+  fold 2  selective dir_acc: @5%=0.6270  @10%=0.6134  @25%=0.5737  @50%=0.5662  @100%=0.5668
+  [ckpt] fold 2 saved → price_model_h5_sp500_tech_fold2.pt
+
+--- Fold 3/5 ---
+  train:  565836  (2016-08-05 → 2021-04-14)
+  val:     35364  (2021-04-14 → 2021-07-27)
+  test:   200399  (2021-07-27 → 2023-03-06)
+  ep   1*  loss=0.00053  tr_dir=0.5719  va_dir=0.5558  va_mae=2.512%
+  ep   2*  loss=0.00042  tr_dir=0.5917  va_dir=0.5558  va_mae=2.496%
+  ep   3   loss=0.00040  tr_dir=0.6065  va_dir=0.5553  va_mae=2.506%
+  ep   4   loss=0.00039  tr_dir=0.6279  va_dir=0.5556  va_mae=2.512%
+  ep   5   loss=0.00038  tr_dir=0.6400  va_dir=0.5582  va_mae=2.544%
+  ep   6   loss=0.00037  tr_dir=0.6516  va_dir=0.5580  va_mae=2.580%
+  ep   7   loss=0.00036  tr_dir=0.6648  va_dir=0.5616  va_mae=2.550%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5071  mae=4.674%  baseline_mae=3.601%
+  fold 3  selective dir_acc: @5%=0.5070  @10%=0.5636  @25%=0.5247  @50%=0.5073  @100%=0.5071
+  [ckpt] fold 3 saved → price_model_h5_sp500_tech_fold3.pt
+
+--- Fold 4/5 ---
+  train:  766235  (2016-08-05 → 2022-11-18)
+  val:     35364  (2022-11-18 → 2023-03-06)
+  test:   200399  (2023-03-06 → 2024-10-09)
+  ep   1*  loss=0.00052  tr_dir=0.5745  va_dir=0.5212  va_mae=3.381%
+  ep   2   loss=0.00044  tr_dir=0.6083  va_dir=0.5057  va_mae=4.137%
+  ep   3   loss=0.00041  tr_dir=0.6310  va_dir=0.5028  va_mae=4.188%
+  ep   4   loss=0.00039  tr_dir=0.6529  va_dir=0.5095  va_mae=4.228%
+  ep   5   loss=0.00038  tr_dir=0.6699  va_dir=0.5016  va_mae=4.530%
+  ep   6   loss=0.00037  tr_dir=0.6741  va_dir=0.5043  va_mae=4.152%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.4774  mae=3.328%  baseline_mae=2.923%
+  fold 4  selective dir_acc: @5%=0.4993  @10%=0.4692  @25%=0.4564  @50%=0.4550  @100%=0.4774
+  [ckpt] fold 4 saved → price_model_h5_sp500_tech_fold4.pt
+
+--- Fold 5/5 ---
+  train:  966634  (2016-08-05 → 2024-07-01)
+  val:     35364  (2024-07-01 → 2024-10-09)
+  test:   200399  (2024-10-09 → 2026-05-14)
+  ep   1*  loss=0.00046  tr_dir=0.5491  va_dir=0.6118  va_mae=3.074%
+  ep   2   loss=0.00044  tr_dir=0.5631  va_dir=0.6057  va_mae=3.105%
+  ep   3   loss=0.00042  tr_dir=0.5919  va_dir=0.5853  va_mae=3.113%
+  ep   4   loss=0.00040  tr_dir=0.6272  va_dir=0.5478  va_mae=3.326%
+  ep   5   loss=0.00039  tr_dir=0.6305  va_dir=0.5485  va_mae=3.447%
+  ep   6   loss=0.00038  tr_dir=0.6476  va_dir=0.5463  va_mae=3.343%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5230  mae=3.415%  baseline_mae=3.425%
+  fold 5  selective dir_acc: @5%=0.7192  @10%=0.6139  @25%=0.5227  @50%=0.5363  @100%=0.5230
+  [ckpt] fold 5 saved → price_model_h5_sp500_tech_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5266 ± 0.0330  (per fold: ['0.5584', '0.5668', '0.5071', '0.4774', '0.5230'])
+Test MAE:       3.681% ± 0.677%
+Baseline MAE:   3.356% ± 0.456%  (always-predict-zero)
+MAE vs baseline:+0.325pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5723 ± 0.0874   per fold: ['0.5088', '0.6270', '0.5070', '0.4993', '0.7192']
+  cov= 10%   mean=0.5551 ± 0.0563   per fold: ['0.5154', '0.6134', '0.5636', '0.4692', '0.6139']
+  cov= 25%   mean=0.5225 ± 0.0378   per fold: ['0.5347', '0.5737', '0.5247', '0.4564', '0.5227']
+  cov= 50%   mean=0.5217 ± 0.0383   per fold: ['0.5436', '0.5662', '0.5073', '0.4550', '0.5363']
+  cov=100%   mean=0.5266 ± 0.0330   per fold: ['0.5584', '0.5668', '0.5071', '0.4774', '0.5230']
+
+Saved:
+  artifacts/price_model_h5_sp500_tech.pt
+  artifacts/price_scaler_h5_sp500_tech.pkl
+  artifacts/price_meta_h5_sp500_tech.json
+
+==================================================
+  Training sp500  horizon=5  features=sentiment
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 5 trading days (1-week) — artifacts tagged _h5
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+[ablation] features mode=sentiment  tag=_sp500_sent
+Features (6): ['sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge']
+Building windows — horizon=5d, window=20d, label=absolute
+  1,202,397 samples, stride=1  (positive return rate: 0.546)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165038  (2016-08-05 → 2017-12-22)
+  val:     35364  (2017-12-22 → 2018-04-12)
+  test:   200399  (2018-04-12 → 2019-12-09)
+  ep   1*  loss=0.00054  tr_dir=0.5650  va_dir=0.5461  va_mae=2.851%
+  ep   2   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.851%
+  ep   3*  loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  ep   4*  loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  ep   5   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  ep   6   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  ep   7   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.851%
+  ep   8   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  ep   9   loss=0.00028  tr_dir=0.5650  va_dir=0.5461  va_mae=2.850%
+  early stop at epoch 9 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5586  mae=2.767%  baseline_mae=2.792%
+  fold 1  selective dir_acc: @5%=0.5583  @10%=0.5572  @25%=0.5518  @50%=0.5568  @100%=0.5586
+  [ckpt] fold 1 saved → price_model_h5_sp500_sent_fold1.pt
+
+--- Fold 2/5 ---
+  train:  365437  (2016-08-05 → 2019-08-26)
+  val:     35364  (2019-08-26 → 2019-12-09)
+  test:   200399  (2019-12-09 → 2021-07-27)
+  ep   1*  loss=0.00043  tr_dir=0.5582  va_dir=0.5805  va_mae=2.581%
+  ep   2   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.596%
+  ep   3   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.585%
+  ep   4*  loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.580%
+  ep   5*  loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.579%
+  ep   6   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.585%
+  ep   7*  loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.577%
+  ep   8*  loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.576%
+  ep   9   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.576%
+  ep  10   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.587%
+  ep  11   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.582%
+  ep  12   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.579%
+  ep  13   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.590%
+  early stop at epoch 13 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5668  mae=4.002%  baseline_mae=4.040%
+  fold 2  selective dir_acc: @5%=0.6459  @10%=0.6249  @25%=0.5207  @50%=0.5524  @100%=0.5668
+  [ckpt] fold 2 saved → price_model_h5_sp500_sent_fold2.pt
+
+--- Fold 3/5 ---
+  train:  565836  (2016-08-05 → 2021-04-14)
+  val:     35364  (2021-04-14 → 2021-07-27)
+  test:   200399  (2021-07-27 → 2023-03-06)
+  ep   1*  loss=0.00050  tr_dir=0.5628  va_dir=0.5558  va_mae=2.510%
+  ep   2   loss=0.00045  tr_dir=0.5628  va_dir=0.5558  va_mae=2.511%
+  ep   3   loss=0.00045  tr_dir=0.5628  va_dir=0.5558  va_mae=2.511%
+  ep   4   loss=0.00045  tr_dir=0.5628  va_dir=0.5558  va_mae=2.512%
+  ep   5   loss=0.00045  tr_dir=0.5628  va_dir=0.5558  va_mae=2.521%
+  ep   6   loss=0.00045  tr_dir=0.5628  va_dir=0.5558  va_mae=2.512%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5113  mae=3.609%  baseline_mae=3.601%
+  fold 3  selective dir_acc: @5%=0.5056  @10%=0.5081  @25%=0.5100  @50%=0.5102  @100%=0.5113
+  [ckpt] fold 3 saved → price_model_h5_sp500_sent_fold3.pt
+
+--- Fold 4/5 ---
+  train:  766235  (2016-08-05 → 2022-11-18)
+  val:     35364  (2022-11-18 → 2023-03-06)
+  test:   200399  (2023-03-06 → 2024-10-09)
+  ep   1*  loss=0.00053  tr_dir=0.5519  va_dir=0.4994  va_mae=3.095%
+  ep   2   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.102%
+  ep   3*  loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.093%
+  ep   4*  loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.090%
+  ep   5   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.096%
+  ep   6   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.100%
+  ep   7   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.092%
+  ep   8   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.098%
+  ep   9   loss=0.00047  tr_dir=0.5519  va_dir=0.4994  va_mae=3.091%
+  early stop at epoch 9 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5571  mae=2.904%  baseline_mae=2.923%
+  fold 4  selective dir_acc: @5%=0.5880  @10%=0.5491  @25%=0.5703  @50%=0.5501  @100%=0.5571
+  [ckpt] fold 4 saved → price_model_h5_sp500_sent_fold4.pt
+
+--- Fold 5/5 ---
+  train:  966634  (2016-08-05 → 2024-07-01)
+  val:     35364  (2024-07-01 → 2024-10-09)
+  test:   200399  (2024-10-09 → 2026-05-14)
+  ep   1*  loss=0.00047  tr_dir=0.5489  va_dir=0.6118  va_mae=3.101%
+  ep   2*  loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.079%
+  ep   3   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.083%
+  ep   4*  loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.070%
+  ep   5   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.111%
+  ep   6   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.079%
+  ep   7*  loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.062%
+  ep   8   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.100%
+  ep   9   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.078%
+  ep  10   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.094%
+  ep  11   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.075%
+  ep  12   loss=0.00046  tr_dir=0.5489  va_dir=0.6118  va_mae=3.087%
+  early stop at epoch 12 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5230  mae=3.430%  baseline_mae=3.425%
+  fold 5  selective dir_acc: @5%=0.5110  @10%=0.5096  @25%=0.4810  @50%=0.5232  @100%=0.5230
+  [ckpt] fold 5 saved → price_model_h5_sp500_sent_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5434 ± 0.0220  (per fold: ['0.5586', '0.5668', '0.5113', '0.5571', '0.5230'])
+Test MAE:       3.342% ± 0.455%
+Baseline MAE:   3.356% ± 0.456%  (always-predict-zero)
+MAE vs baseline:-0.014pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5618 ± 0.0520   per fold: ['0.5583', '0.6459', '0.5056', '0.5880', '0.5110']
+  cov= 10%   mean=0.5498 ± 0.0426   per fold: ['0.5572', '0.6249', '0.5081', '0.5491', '0.5096']
+  cov= 25%   mean=0.5268 ± 0.0314   per fold: ['0.5518', '0.5207', '0.5100', '0.5703', '0.4810']
+  cov= 50%   mean=0.5385 ± 0.0184   per fold: ['0.5568', '0.5524', '0.5102', '0.5501', '0.5232']
+  cov=100%   mean=0.5434 ± 0.0220   per fold: ['0.5586', '0.5668', '0.5113', '0.5571', '0.5230']
+
+Saved:
+  artifacts/price_model_h5_sp500_sent.pt
+  artifacts/price_scaler_h5_sp500_sent.pkl
+  artifacts/price_meta_h5_sp500_sent.json
+
+==================================================
+  Training sp500  horizon=5  features=both
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 5 trading days (1-week) — artifacts tagged _h5
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=both  tag=_sp500_both
+Features (28): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=5d, window=20d, label=absolute
+  1,202,397 samples, stride=1  (positive return rate: 0.546)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  165038  (2016-08-05 → 2017-12-22)
+  val:     35364  (2017-12-22 → 2018-04-12)
+  test:   200399  (2018-04-12 → 2019-12-09)
+  ep   1*  loss=0.00033  tr_dir=0.5650  va_dir=0.5461  va_mae=2.821%
+  ep   2*  loss=0.00028  tr_dir=0.5651  va_dir=0.5462  va_mae=2.820%
+  ep   3*  loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.798%
+  ep   4*  loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.791%
+  ep   5   loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.802%
+  ep   6   loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.792%
+  ep   7*  loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.786%
+  ep   8   loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.787%
+  ep   9   loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.807%
+  ep  10   loss=0.00027  tr_dir=0.5650  va_dir=0.5461  va_mae=2.857%
+  ep  11   loss=0.00026  tr_dir=0.5782  va_dir=0.5461  va_mae=2.882%
+  ep  12   loss=0.00026  tr_dir=0.5907  va_dir=0.5462  va_mae=2.974%
+  early stop at epoch 12 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5586  mae=2.770%  baseline_mae=2.792%
+  fold 1  selective dir_acc: @5%=0.5701  @10%=0.5742  @25%=0.5889  @50%=0.5647  @100%=0.5586
+  [ckpt] fold 1 saved → price_model_h5_sp500_both_fold1.pt
+
+--- Fold 2/5 ---
+  train:  365437  (2016-08-05 → 2019-08-26)
+  val:     35364  (2019-08-26 → 2019-12-09)
+  test:   200399  (2019-12-09 → 2021-07-27)
+  ep   1*  loss=0.00035  tr_dir=0.5582  va_dir=0.5805  va_mae=2.578%
+  ep   2   loss=0.00034  tr_dir=0.5582  va_dir=0.5805  va_mae=2.587%
+  ep   3   loss=0.00033  tr_dir=0.5582  va_dir=0.5805  va_mae=2.597%
+  ep   4   loss=0.00033  tr_dir=0.5582  va_dir=0.5805  va_mae=2.614%
+  ep   5   loss=0.00033  tr_dir=0.5583  va_dir=0.5805  va_mae=2.601%
+  ep   6   loss=0.00032  tr_dir=0.6007  va_dir=0.5147  va_mae=2.631%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.5668  mae=4.050%  baseline_mae=4.040%
+  fold 2  selective dir_acc: @5%=0.5577  @10%=0.5858  @25%=0.5645  @50%=0.5686  @100%=0.5668
+  [ckpt] fold 2 saved → price_model_h5_sp500_both_fold2.pt
+
+--- Fold 3/5 ---
+  train:  565836  (2016-08-05 → 2021-04-14)
+  val:     35364  (2021-04-14 → 2021-07-27)
+  test:   200399  (2021-07-27 → 2023-03-06)
+  ep   1*  loss=0.00052  tr_dir=0.5822  va_dir=0.5558  va_mae=2.503%
+  ep   2   loss=0.00041  tr_dir=0.6007  va_dir=0.5538  va_mae=2.509%
+  ep   3   loss=0.00039  tr_dir=0.6218  va_dir=0.5489  va_mae=2.518%
+  ep   4   loss=0.00038  tr_dir=0.6348  va_dir=0.5530  va_mae=2.545%
+  ep   5   loss=0.00037  tr_dir=0.6517  va_dir=0.5518  va_mae=2.543%
+  ep   6   loss=0.00036  tr_dir=0.6623  va_dir=0.5384  va_mae=2.648%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5202  mae=3.839%  baseline_mae=3.601%
+  fold 3  selective dir_acc: @5%=0.3905  @10%=0.4829  @25%=0.5367  @50%=0.5403  @100%=0.5202
+  [ckpt] fold 3 saved → price_model_h5_sp500_both_fold3.pt
+
+--- Fold 4/5 ---
+  train:  766235  (2016-08-05 → 2022-11-18)
+  val:     35364  (2022-11-18 → 2023-03-06)
+  test:   200399  (2023-03-06 → 2024-10-09)
+  ep   1*  loss=0.00048  tr_dir=0.5713  va_dir=0.5053  va_mae=3.208%
+  ep   2   loss=0.00043  tr_dir=0.6145  va_dir=0.5203  va_mae=3.841%
+  ep   3   loss=0.00040  tr_dir=0.6351  va_dir=0.5243  va_mae=3.818%
+  ep   4   loss=0.00039  tr_dir=0.6455  va_dir=0.5242  va_mae=3.892%
+  ep   5   loss=0.00038  tr_dir=0.6545  va_dir=0.5213  va_mae=4.060%
+  ep   6   loss=0.00038  tr_dir=0.6652  va_dir=0.5120  va_mae=3.950%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.4806  mae=3.096%  baseline_mae=2.923%
+  fold 4  selective dir_acc: @5%=0.4785  @10%=0.4644  @25%=0.4631  @50%=0.4622  @100%=0.4806
+  [ckpt] fold 4 saved → price_model_h5_sp500_both_fold4.pt
+
+--- Fold 5/5 ---
+  train:  966634  (2016-08-05 → 2024-07-01)
+  val:     35364  (2024-07-01 → 2024-10-09)
+  test:   200399  (2024-10-09 → 2026-05-14)
+  ep   1*  loss=0.00046  tr_dir=0.5668  va_dir=0.5624  va_mae=3.134%
+  ep   2   loss=0.00042  tr_dir=0.6064  va_dir=0.5204  va_mae=3.454%
+  ep   3   loss=0.00040  tr_dir=0.6287  va_dir=0.5224  va_mae=3.387%
+  ep   4   loss=0.00039  tr_dir=0.6526  va_dir=0.5369  va_mae=3.288%
+  ep   5   loss=0.00038  tr_dir=0.6656  va_dir=0.5328  va_mae=3.427%
+  ep   6   loss=0.00037  tr_dir=0.6773  va_dir=0.5195  va_mae=3.366%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5203  mae=3.475%  baseline_mae=3.425%
+  fold 5  selective dir_acc: @5%=0.6300  @10%=0.6041  @25%=0.5503  @50%=0.5409  @100%=0.5203
+  [ckpt] fold 5 saved → price_model_h5_sp500_both_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5293 ± 0.0310  (per fold: ['0.5586', '0.5668', '0.5202', '0.4806', '0.5203'])
+Test MAE:       3.446% ± 0.469%
+Baseline MAE:   3.356% ± 0.456%  (always-predict-zero)
+MAE vs baseline:+0.090pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5254 ± 0.0829   per fold: ['0.5701', '0.5577', '0.3905', '0.4785', '0.6300']
+  cov= 10%   mean=0.5423 ± 0.0571   per fold: ['0.5742', '0.5858', '0.4829', '0.4644', '0.6041']
+  cov= 25%   mean=0.5407 ± 0.0425   per fold: ['0.5889', '0.5645', '0.5367', '0.4631', '0.5503']
+  cov= 50%   mean=0.5354 ± 0.0384   per fold: ['0.5647', '0.5686', '0.5403', '0.4622', '0.5409']
+  cov=100%   mean=0.5293 ± 0.0310   per fold: ['0.5586', '0.5668', '0.5202', '0.4806', '0.5203']
+
+Saved:
+  artifacts/price_model_h5_sp500_both.pt
+  artifacts/price_scaler_h5_sp500_both.pkl
+  artifacts/price_meta_h5_sp500_both.json
+
+==================================================
+  Training sp500  horizon=21  features=technical
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 21 trading days (1-month) — artifacts tagged _h21
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=technical  tag=_sp500_tech
+Features (22): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=21d, window=20d, label=absolute
+  1,194,349 samples, stride=1  (positive return rate: 0.575)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  163932  (2016-08-05 → 2017-12-19)
+  val:     35127  (2017-12-19 → 2018-04-09)
+  test:   199058  (2018-04-09 → 2019-11-29)
+  ep   1*  loss=0.00092  tr_dir=0.6281  va_dir=0.4696  va_mae=5.830%
+  ep   2   loss=0.00073  tr_dir=0.6556  va_dir=0.4838  va_mae=7.036%
+  ep   3   loss=0.00071  tr_dir=0.6689  va_dir=0.5142  va_mae=6.824%
+  ep   4   loss=0.00070  tr_dir=0.6787  va_dir=0.5148  va_mae=6.303%
+  ep   5   loss=0.00068  tr_dir=0.6907  va_dir=0.5083  va_mae=6.333%
+  ep   6   loss=0.00067  tr_dir=0.6907  va_dir=0.5120  va_mae=5.984%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5503  mae=6.045%  baseline_mae=5.965%
+  fold 1  selective dir_acc: @5%=0.5274  @10%=0.5036  @25%=0.5467  @50%=0.5576  @100%=0.5503
+  [ckpt] fold 1 saved → price_model_h21_sp500_tech_fold1.pt
+
+--- Fold 2/5 ---
+  train:  362990  (2016-08-05 → 2019-08-19)
+  val:     35127  (2019-08-19 → 2019-11-29)
+  test:   199058  (2019-11-29 → 2021-07-15)
+  ep   1*  loss=0.00090  tr_dir=0.6130  va_dir=0.6419  va_mae=5.195%
+  ep   2   loss=0.00083  tr_dir=0.6607  va_dir=0.5831  va_mae=5.330%
+  ep   3   loss=0.00079  tr_dir=0.6870  va_dir=0.5392  va_mae=5.795%
+  ep   4   loss=0.00077  tr_dir=0.6985  va_dir=0.5321  va_mae=5.840%
+  ep   5   loss=0.00075  tr_dir=0.7091  va_dir=0.5288  va_mae=6.053%
+  ep   6   loss=0.00074  tr_dir=0.7138  va_dir=0.5352  va_mae=5.998%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.6188  mae=8.316%  baseline_mae=8.520%
+  fold 2  selective dir_acc: @5%=0.8097  @10%=0.7774  @25%=0.6930  @50%=0.6356  @100%=0.6188
+  [ckpt] fold 2 saved → price_model_h21_sp500_tech_fold2.pt
+
+--- Fold 3/5 ---
+  train:  562048  (2016-08-05 → 2021-04-01)
+  val:     35127  (2021-04-01 → 2021-07-15)
+  test:   199058  (2021-07-15 → 2023-02-17)
+  ep   1*  loss=0.00113  tr_dir=0.6299  va_dir=0.5786  va_mae=5.847%
+  ep   2*  loss=0.00097  tr_dir=0.6623  va_dir=0.5792  va_mae=5.758%
+  ep   3   loss=0.00093  tr_dir=0.6666  va_dir=0.5827  va_mae=6.008%
+  ep   4   loss=0.00091  tr_dir=0.6870  va_dir=0.5826  va_mae=6.335%
+  ep   5   loss=0.00089  tr_dir=0.7027  va_dir=0.5855  va_mae=6.034%
+  ep   6   loss=0.00087  tr_dir=0.7117  va_dir=0.5839  va_mae=6.394%
+  ep   7   loss=0.00086  tr_dir=0.7189  va_dir=0.5834  va_mae=6.365%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5483  mae=7.491%  baseline_mae=7.393%
+  fold 3  selective dir_acc: @5%=0.7127  @10%=0.6920  @25%=0.6253  @50%=0.6006  @100%=0.5483
+  [ckpt] fold 3 saved → price_model_h21_sp500_tech_fold3.pt
+
+--- Fold 4/5 ---
+  train:  761106  (2016-08-05 → 2022-11-04)
+  val:     35127  (2022-11-04 → 2023-02-17)
+  test:   199058  (2023-02-17 → 2024-09-20)
+  ep   1*  loss=0.00110  tr_dir=0.6543  va_dir=0.5440  va_mae=8.528%
+  ep   2   loss=0.00098  tr_dir=0.6726  va_dir=0.5410  va_mae=8.584%
+  ep   3*  loss=0.00095  tr_dir=0.6835  va_dir=0.5420  va_mae=8.322%
+  ep   4*  loss=0.00093  tr_dir=0.6964  va_dir=0.5406  va_mae=8.306%
+  ep   5   loss=0.00091  tr_dir=0.7032  va_dir=0.5373  va_mae=8.410%
+  ep   6   loss=0.00090  tr_dir=0.7130  va_dir=0.5389  va_mae=8.796%
+  ep   7*  loss=0.00089  tr_dir=0.7177  va_dir=0.5405  va_mae=7.757%
+  ep   8   loss=0.00088  tr_dir=0.7224  va_dir=0.5345  va_mae=8.108%
+  ep   9   loss=0.00087  tr_dir=0.7257  va_dir=0.5398  va_mae=8.911%
+  ep  10   loss=0.00087  tr_dir=0.7290  va_dir=0.5385  va_mae=7.858%
+  ep  11   loss=0.00086  tr_dir=0.7321  va_dir=0.5371  va_mae=7.822%
+  ep  12   loss=0.00086  tr_dir=0.7344  va_dir=0.5359  va_mae=8.408%
+  early stop at epoch 12 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.4298  mae=8.735%  baseline_mae=6.365%
+  fold 4  selective dir_acc: @5%=0.4248  @10%=0.4330  @25%=0.4223  @50%=0.4134  @100%=0.4298
+  [ckpt] fold 4 saved → price_model_h21_sp500_tech_fold4.pt
+
+--- Fold 5/5 ---
+  train:  960164  (2016-08-05 → 2024-06-11)
+  val:     35127  (2024-06-11 → 2024-09-20)
+  test:   199058  (2024-09-20 → 2026-04-22)
+  ep   1*  loss=0.00107  tr_dir=0.6467  va_dir=0.6266  va_mae=6.275%
+  ep   2   loss=0.00099  tr_dir=0.6685  va_dir=0.5581  va_mae=6.967%
+  ep   3   loss=0.00095  tr_dir=0.6804  va_dir=0.5505  va_mae=7.225%
+  ep   4   loss=0.00093  tr_dir=0.6858  va_dir=0.5576  va_mae=6.851%
+  ep   5   loss=0.00092  tr_dir=0.7011  va_dir=0.4850  va_mae=7.729%
+  ep   6   loss=0.00090  tr_dir=0.7107  va_dir=0.5092  va_mae=7.202%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5082  mae=7.550%  baseline_mae=7.336%
+  fold 5  selective dir_acc: @5%=0.5641  @10%=0.5372  @25%=0.4993  @50%=0.4981  @100%=0.5082
+  [ckpt] fold 5 saved → price_model_h21_sp500_tech_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5311 ± 0.0619  (per fold: ['0.5503', '0.6188', '0.5483', '0.4298', '0.5082'])
+Test MAE:       7.627% ± 0.920%
+Baseline MAE:   7.116% ± 0.893%  (always-predict-zero)
+MAE vs baseline:+0.512pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.6078 ± 0.1368   per fold: ['0.5274', '0.8097', '0.7127', '0.4248', '0.5641']
+  cov= 10%   mean=0.5886 ± 0.1268   per fold: ['0.5036', '0.7774', '0.6920', '0.4330', '0.5372']
+  cov= 25%   mean=0.5573 ± 0.0946   per fold: ['0.5467', '0.6930', '0.6253', '0.4223', '0.4993']
+  cov= 50%   mean=0.5411 ± 0.0786   per fold: ['0.5576', '0.6356', '0.6006', '0.4134', '0.4981']
+  cov=100%   mean=0.5311 ± 0.0619   per fold: ['0.5503', '0.6188', '0.5483', '0.4298', '0.5082']
+
+Saved:
+  artifacts/price_model_h21_sp500_tech.pt
+  artifacts/price_scaler_h21_sp500_tech.pkl
+  artifacts/price_meta_h21_sp500_tech.json
+
+==================================================
+  Training sp500  horizon=21  features=sentiment
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 21 trading days (1-month) — artifacts tagged _h21
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+[ablation] features mode=sentiment  tag=_sp500_sent
+Features (6): ['sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge']
+Building windows — horizon=21d, window=20d, label=absolute
+  1,194,349 samples, stride=1  (positive return rate: 0.575)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  163932  (2016-08-05 → 2017-12-19)
+  val:     35127  (2017-12-19 → 2018-04-09)
+  test:   199058  (2018-04-09 → 2019-11-29)
+  ep   1*  loss=0.00093  tr_dir=0.6278  va_dir=0.4709  va_mae=5.826%
+  ep   2*  loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.766%
+  ep   3*  loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.729%
+  ep   4   loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.798%
+  ep   5   loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.753%
+  ep   6   loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.799%
+  ep   7   loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.801%
+  ep   8   loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.746%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.5996  mae=5.801%  baseline_mae=5.965%
+  fold 1  selective dir_acc: @5%=0.6112  @10%=0.6061  @25%=0.6029  @50%=0.6080  @100%=0.5996
+  [ckpt] fold 1 saved → price_model_h21_sp500_sent_fold1.pt
+
+--- Fold 2/5 ---
+  train:  362990  (2016-08-05 → 2019-08-19)
+  val:     35127  (2019-08-19 → 2019-11-29)
+  test:   199058  (2019-11-29 → 2021-07-15)
+  ep   1*  loss=0.00091  tr_dir=0.5964  va_dir=0.6368  va_mae=5.155%
+  ep   2   loss=0.00089  tr_dir=0.5964  va_dir=0.6368  va_mae=5.158%
+  ep   3   loss=0.00089  tr_dir=0.5967  va_dir=0.6366  va_mae=5.159%
+  ep   4   loss=0.00089  tr_dir=0.5970  va_dir=0.6368  va_mae=5.180%
+  ep   5   loss=0.00089  tr_dir=0.5964  va_dir=0.6368  va_mae=5.155%
+  ep   6   loss=0.00089  tr_dir=0.5976  va_dir=0.6357  va_mae=5.178%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.6223  mae=8.255%  baseline_mae=8.520%
+  fold 2  selective dir_acc: @5%=0.6713  @10%=0.6544  @25%=0.6329  @50%=0.6296  @100%=0.6223
+  [ckpt] fold 2 saved → price_model_h21_sp500_sent_fold2.pt
+
+--- Fold 3/5 ---
+  train:  562048  (2016-08-05 → 2021-04-01)
+  val:     35127  (2021-04-01 → 2021-07-15)
+  test:   199058  (2021-07-15 → 2023-02-17)
+  ep   1*  loss=0.00110  tr_dir=0.6091  va_dir=0.5786  va_mae=5.376%
+  ep   2   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.379%
+  ep   3*  loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.375%
+  ep   4   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.398%
+  ep   5   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.394%
+  ep   6   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.389%
+  ep   7   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.405%
+  ep   8   loss=0.00109  tr_dir=0.6091  va_dir=0.5786  va_mae=5.410%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5009  mae=7.515%  baseline_mae=7.393%
+  fold 3  selective dir_acc: @5%=0.5854  @10%=0.5544  @25%=0.5357  @50%=0.4979  @100%=0.5009
+  [ckpt] fold 3 saved → price_model_h21_sp500_sent_fold3.pt
+
+--- Fold 4/5 ---
+  train:  761106  (2016-08-05 → 2022-11-04)
+  val:     35127  (2022-11-04 → 2023-02-17)
+  test:   199058  (2023-02-17 → 2024-09-20)
+  ep   1*  loss=0.00119  tr_dir=0.5847  va_dir=0.4944  va_mae=6.755%
+  ep   2   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.769%
+  ep   3   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.787%
+  ep   4   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.833%
+  ep   5*  loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.742%
+  ep   6   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.759%
+  ep   7   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.804%
+  ep   8   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.747%
+  ep   9   loss=0.00113  tr_dir=0.5848  va_dir=0.4944  va_mae=6.753%
+  ep  10   loss=0.00113  tr_dir=0.5847  va_dir=0.4944  va_mae=6.751%
+  early stop at epoch 10 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5915  mae=6.232%  baseline_mae=6.365%
+  fold 4  selective dir_acc: @5%=0.5610  @10%=0.5470  @25%=0.5472  @50%=0.5911  @100%=0.5915
+  [ckpt] fold 4 saved → price_model_h21_sp500_sent_fold4.pt
+
+--- Fold 5/5 ---
+  train:  960164  (2016-08-05 → 2024-06-11)
+  val:     35127  (2024-06-11 → 2024-09-20)
+  test:   199058  (2024-09-20 → 2026-04-22)
+  ep   1*  loss=0.00115  tr_dir=0.5790  va_dir=0.6900  va_mae=5.972%
+  ep   2*  loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=5.921%
+  ep   3   loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=6.052%
+  ep   4   loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=5.961%
+  ep   5   loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=5.954%
+  ep   6   loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=5.979%
+  ep   7   loss=0.00112  tr_dir=0.5790  va_dir=0.6900  va_mae=5.955%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5328  mae=7.370%  baseline_mae=7.336%
+  fold 5  selective dir_acc: @5%=0.5568  @10%=0.5303  @25%=0.5416  @50%=0.5562  @100%=0.5328
+  [ckpt] fold 5 saved → price_model_h21_sp500_sent_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5694 ± 0.0452  (per fold: ['0.5996', '0.6223', '0.5009', '0.5915', '0.5328'])
+Test MAE:       7.035% ± 0.894%
+Baseline MAE:   7.116% ± 0.893%  (always-predict-zero)
+MAE vs baseline:-0.081pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.5971 ± 0.0419   per fold: ['0.6112', '0.6713', '0.5854', '0.5610', '0.5568']
+  cov= 10%   mean=0.5784 ± 0.0456   per fold: ['0.6061', '0.6544', '0.5544', '0.5470', '0.5303']
+  cov= 25%   mean=0.5721 ± 0.0388   per fold: ['0.6029', '0.6329', '0.5357', '0.5472', '0.5416']
+  cov= 50%   mean=0.5766 ± 0.0461   per fold: ['0.6080', '0.6296', '0.4979', '0.5911', '0.5562']
+  cov=100%   mean=0.5694 ± 0.0452   per fold: ['0.5996', '0.6223', '0.5009', '0.5915', '0.5328']
+
+Saved:
+  artifacts/price_model_h21_sp500_sent.pt
+  artifacts/price_scaler_h21_sp500_sent.pkl
+  artifacts/price_meta_h21_sp500_sent.json
+
+==================================================
+  Training sp500  horizon=21  features=both
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 21 trading days (1-month) — artifacts tagged _h21
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=both  tag=_sp500_both
+Features (28): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=21d, window=20d, label=absolute
+  1,194,349 samples, stride=1  (positive return rate: 0.575)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  163932  (2016-08-05 → 2017-12-19)
+  val:     35127  (2017-12-19 → 2018-04-09)
+  test:   199058  (2018-04-09 → 2019-11-29)
+  ep   1*  loss=0.00080  tr_dir=0.6278  va_dir=0.4709  va_mae=5.943%
+  ep   2*  loss=0.00075  tr_dir=0.6278  va_dir=0.4709  va_mae=5.873%
+  ep   3*  loss=0.00073  tr_dir=0.6446  va_dir=0.5150  va_mae=5.732%
+  ep   4   loss=0.00071  tr_dir=0.6531  va_dir=0.5242  va_mae=5.738%
+  ep   5   loss=0.00069  tr_dir=0.6849  va_dir=0.5137  va_mae=5.981%
+  ep   6   loss=0.00067  tr_dir=0.6955  va_dir=0.5282  va_mae=6.481%
+  ep   7   loss=0.00065  tr_dir=0.7081  va_dir=0.5213  va_mae=6.330%
+  ep   8   loss=0.00064  tr_dir=0.7110  va_dir=0.5330  va_mae=6.022%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.4531  mae=6.245%  baseline_mae=5.965%
+  fold 1  selective dir_acc: @5%=0.5487  @10%=0.5491  @25%=0.5580  @50%=0.4810  @100%=0.4531
+  [ckpt] fold 1 saved → price_model_h21_sp500_both_fold1.pt
+
+--- Fold 2/5 ---
+  train:  362990  (2016-08-05 → 2019-08-19)
+  val:     35127  (2019-08-19 → 2019-11-29)
+  test:   199058  (2019-11-29 → 2021-07-15)
+  ep   1*  loss=0.00097  tr_dir=0.5963  va_dir=0.6368  va_mae=5.173%
+  ep   2   loss=0.00085  tr_dir=0.6297  va_dir=0.5591  va_mae=5.287%
+  ep   3   loss=0.00082  tr_dir=0.6632  va_dir=0.5318  va_mae=5.402%
+  ep   4   loss=0.00079  tr_dir=0.6809  va_dir=0.5497  va_mae=5.581%
+  ep   5   loss=0.00077  tr_dir=0.6948  va_dir=0.5198  va_mae=5.946%
+  ep   6   loss=0.00075  tr_dir=0.7021  va_dir=0.5179  va_mae=5.971%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.6220  mae=9.196%  baseline_mae=8.520%
+  fold 2  selective dir_acc: @5%=0.8310  @10%=0.7921  @25%=0.7105  @50%=0.6433  @100%=0.6220
+  [ckpt] fold 2 saved → price_model_h21_sp500_both_fold2.pt
+
+--- Fold 3/5 ---
+  train:  562048  (2016-08-05 → 2021-04-01)
+  val:     35127  (2021-04-01 → 2021-07-15)
+  test:   199058  (2021-07-15 → 2023-02-17)
+  ep   1*  loss=0.00107  tr_dir=0.6178  va_dir=0.5786  va_mae=5.753%
+  ep   2*  loss=0.00099  tr_dir=0.6521  va_dir=0.5787  va_mae=5.715%
+  ep   3   loss=0.00094  tr_dir=0.6660  va_dir=0.5812  va_mae=6.433%
+  ep   4   loss=0.00092  tr_dir=0.6736  va_dir=0.5844  va_mae=6.189%
+  ep   5   loss=0.00091  tr_dir=0.6787  va_dir=0.5847  va_mae=6.169%
+  ep   6   loss=0.00089  tr_dir=0.6884  va_dir=0.5842  va_mae=6.249%
+  ep   7   loss=0.00088  tr_dir=0.6993  va_dir=0.5801  va_mae=6.350%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.5639  mae=7.670%  baseline_mae=7.393%
+  fold 3  selective dir_acc: @5%=0.6619  @10%=0.6623  @25%=0.6376  @50%=0.6247  @100%=0.5639
+  [ckpt] fold 3 saved → price_model_h21_sp500_both_fold3.pt
+
+--- Fold 4/5 ---
+  train:  761106  (2016-08-05 → 2022-11-04)
+  val:     35127  (2022-11-04 → 2023-02-17)
+  test:   199058  (2023-02-17 → 2024-09-20)
+  ep   1*  loss=0.00113  tr_dir=0.6484  va_dir=0.5443  va_mae=7.940%
+  ep   2   loss=0.00099  tr_dir=0.6723  va_dir=0.5398  va_mae=9.487%
+  ep   3   loss=0.00095  tr_dir=0.6820  va_dir=0.5423  va_mae=8.674%
+  ep   4   loss=0.00093  tr_dir=0.6873  va_dir=0.5409  va_mae=9.725%
+  ep   5   loss=0.00092  tr_dir=0.6948  va_dir=0.5431  va_mae=8.422%
+  ep   6   loss=0.00091  tr_dir=0.6995  va_dir=0.5403  va_mae=8.643%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.4364  mae=8.213%  baseline_mae=6.365%
+  fold 4  selective dir_acc: @5%=0.5087  @10%=0.5003  @25%=0.4663  @50%=0.4349  @100%=0.4364
+  [ckpt] fold 4 saved → price_model_h21_sp500_both_fold4.pt
+
+--- Fold 5/5 ---
+  train:  960164  (2016-08-05 → 2024-06-11)
+  val:     35127  (2024-06-11 → 2024-09-20)
+  test:   199058  (2024-09-20 → 2026-04-22)
+  ep   1*  loss=0.00106  tr_dir=0.6408  va_dir=0.6563  va_mae=6.191%
+  ep   2   loss=0.00099  tr_dir=0.6637  va_dir=0.5648  va_mae=6.736%
+  ep   3   loss=0.00095  tr_dir=0.6865  va_dir=0.4992  va_mae=7.330%
+  ep   4   loss=0.00092  tr_dir=0.7039  va_dir=0.5295  va_mae=7.025%
+  ep   5   loss=0.00091  tr_dir=0.7102  va_dir=0.5068  va_mae=7.259%
+  ep   6   loss=0.00089  tr_dir=0.7147  va_dir=0.5370  va_mae=6.901%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5158  mae=7.507%  baseline_mae=7.336%
+  fold 5  selective dir_acc: @5%=0.4911  @10%=0.4960  @25%=0.4983  @50%=0.4862  @100%=0.5158
+  [ckpt] fold 5 saved → price_model_h21_sp500_both_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5182 ± 0.0690  (per fold: ['0.4531', '0.6220', '0.5639', '0.4364', '0.5158'])
+Test MAE:       7.766% ± 0.963%
+Baseline MAE:   7.116% ± 0.893%  (always-predict-zero)
+MAE vs baseline:+0.650pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.6083 ± 0.1262   per fold: ['0.5487', '0.8310', '0.6619', '0.5087', '0.4911']
+  cov= 10%   mean=0.5999 ± 0.1133   per fold: ['0.5491', '0.7921', '0.6623', '0.5003', '0.4960']
+  cov= 25%   mean=0.5741 ± 0.0897   per fold: ['0.5580', '0.7105', '0.6376', '0.4663', '0.4983']
+  cov= 50%   mean=0.5340 ± 0.0838   per fold: ['0.4810', '0.6433', '0.6247', '0.4349', '0.4862']
+  cov=100%   mean=0.5182 ± 0.0690   per fold: ['0.4531', '0.6220', '0.5639', '0.4364', '0.5158']
+
+Saved:
+  artifacts/price_model_h21_sp500_both.pt
+  artifacts/price_scaler_h21_sp500_both.pkl
+  artifacts/price_meta_h21_sp500_both.json
+
+==================================================
+  Training sp500  horizon=252  features=technical
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 252 trading days (1-year) — artifacts tagged _h252
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=technical  tag=_sp500_tech
+Features (22): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=252d, window=20d, label=absolute
+  1,078,317 samples, stride=1  (positive return rate: 0.682)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  148007  (2016-08-05 → 2017-11-01)
+  val:     31715  (2017-11-01 → 2018-02-08)
+  test:   179719  (2018-02-08 → 2019-08-07)
+  ep   1*  loss=0.00383  tr_dir=0.7983  va_dir=0.5262  va_mae=23.011%
+  ep   2*  loss=0.00374  tr_dir=0.7991  va_dir=0.5258  va_mae=19.796%
+  ep   3   loss=0.00367  tr_dir=0.7984  va_dir=0.5262  va_mae=20.529%
+  ep   4   loss=0.00360  tr_dir=0.8019  va_dir=0.5263  va_mae=19.987%
+  ep   5   loss=0.00351  tr_dir=0.8026  va_dir=0.5283  va_mae=20.061%
+  ep   6   loss=0.00345  tr_dir=0.8020  va_dir=0.5236  va_mae=20.606%
+  ep   7*  loss=0.00338  tr_dir=0.8055  va_dir=0.5267  va_mae=19.612%
+  ep   8   loss=0.00331  tr_dir=0.8051  va_dir=0.5214  va_mae=19.867%
+  ep   9*  loss=0.00326  tr_dir=0.8056  va_dir=0.5391  va_mae=19.522%
+  ep  10   loss=0.00321  tr_dir=0.8105  va_dir=0.5404  va_mae=19.743%
+  ep  11   loss=0.00316  tr_dir=0.8102  va_dir=0.5321  va_mae=19.847%
+  ep  12*  loss=0.00312  tr_dir=0.8147  va_dir=0.5506  va_mae=19.249%
+  ep  13   loss=0.00307  tr_dir=0.8173  va_dir=0.5289  va_mae=19.368%
+  ep  14   loss=0.00304  tr_dir=0.8198  va_dir=0.5290  va_mae=19.839%
+  ep  15   loss=0.00299  tr_dir=0.8240  va_dir=0.5300  va_mae=19.408%
+  ep  16   loss=0.00297  tr_dir=0.8255  va_dir=0.5280  va_mae=19.565%
+  ep  17   loss=0.00293  tr_dir=0.8255  va_dir=0.5243  va_mae=19.712%
+  early stop at epoch 17 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.6458  mae=22.908%  baseline_mae=23.848%
+  fold 1  selective dir_acc: @5%=0.6436  @10%=0.6262  @25%=0.6223  @50%=0.6353  @100%=0.6458
+  [ckpt] fold 1 saved → price_model_h252_sp500_tech_fold1.pt
+
+--- Fold 2/5 ---
+  train:  327726  (2016-08-05 → 2019-05-03)
+  val:     31715  (2019-05-03 → 2019-08-07)
+  test:   179719  (2019-08-07 → 2021-01-26)
+  ep   1*  loss=0.00379  tr_dir=0.7445  va_dir=0.5306  va_mae=25.780%
+  ep   2   loss=0.00366  tr_dir=0.7523  va_dir=0.5334  va_mae=25.782%
+  ep   3   loss=0.00360  tr_dir=0.7569  va_dir=0.5272  va_mae=26.085%
+  ep   4   loss=0.00353  tr_dir=0.7635  va_dir=0.5246  va_mae=26.294%
+  ep   5   loss=0.00348  tr_dir=0.7622  va_dir=0.5254  va_mae=26.634%
+  ep   6   loss=0.00343  tr_dir=0.7670  va_dir=0.5168  va_mae=26.469%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.7732  mae=33.747%  baseline_mae=42.305%
+  fold 2  selective dir_acc: @5%=0.9813  @10%=0.9774  @25%=0.9618  @50%=0.8513  @100%=0.7732
+  [ckpt] fold 2 saved → price_model_h252_sp500_tech_fold2.pt
+
+--- Fold 3/5 ---
+  train:  507445  (2016-08-05 → 2020-10-21)
+  val:     31715  (2020-10-21 → 2021-01-26)
+  test:   179719  (2021-01-26 → 2022-07-07)
+  ep   1*  loss=0.00458  tr_dir=0.7452  va_dir=0.8850  va_mae=25.331%
+  ep   2*  loss=0.00432  tr_dir=0.7538  va_dir=0.8850  va_mae=24.647%
+  ep   3   loss=0.00424  tr_dir=0.7559  va_dir=0.8850  va_mae=25.276%
+  ep   4   loss=0.00418  tr_dir=0.7617  va_dir=0.8850  va_mae=25.543%
+  ep   5*  loss=0.00413  tr_dir=0.7634  va_dir=0.8850  va_mae=24.158%
+  ep   6   loss=0.00409  tr_dir=0.7680  va_dir=0.8850  va_mae=24.432%
+  ep   7   loss=0.00405  tr_dir=0.7715  va_dir=0.8850  va_mae=24.751%
+  ep   8   loss=0.00402  tr_dir=0.7646  va_dir=0.8850  va_mae=24.375%
+  ep   9   loss=0.00398  tr_dir=0.7719  va_dir=0.8850  va_mae=24.310%
+  ep  10   loss=0.00395  tr_dir=0.7790  va_dir=0.8850  va_mae=24.699%
+  early stop at epoch 10 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.4834  mae=29.720%  baseline_mae=20.946%
+  fold 3  selective dir_acc: @5%=0.4465  @10%=0.4872  @25%=0.4822  @50%=0.4769  @100%=0.4834
+  [ckpt] fold 3 saved → price_model_h252_sp500_tech_fold3.pt
+
+--- Fold 4/5 ---
+  train:  687164  (2016-08-05 → 2022-04-04)
+  val:     31715  (2022-04-04 → 2022-07-07)
+  test:   179719  (2022-07-07 → 2023-12-12)
+  ep   1*  loss=0.00438  tr_dir=0.7272  va_dir=0.5131  va_mae=21.203%
+  ep   2   loss=0.00419  tr_dir=0.7426  va_dir=0.4890  va_mae=21.484%
+  ep   3   loss=0.00411  tr_dir=0.7453  va_dir=0.4917  va_mae=21.810%
+  ep   4   loss=0.00406  tr_dir=0.7468  va_dir=0.5071  va_mae=21.240%
+  ep   5   loss=0.00400  tr_dir=0.7545  va_dir=0.4926  va_mae=21.549%
+  ep   6   loss=0.00396  tr_dir=0.7573  va_dir=0.5081  va_mae=21.750%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5374  mae=30.282%  baseline_mae=30.606%
+  fold 4  selective dir_acc: @5%=0.6489  @10%=0.6626  @25%=0.6500  @50%=0.5842  @100%=0.5374
+  [ckpt] fold 4 saved → price_model_h252_sp500_tech_fold4.pt
+
+--- Fold 5/5 ---
+  train:  866883  (2016-08-05 → 2023-09-13)
+  val:     31715  (2023-09-13 → 2023-12-12)
+  test:   179719  (2023-12-12 → 2025-05-20)
+  ep   1*  loss=0.00445  tr_dir=0.7212  va_dir=0.8283  va_mae=32.240%
+  ep   2*  loss=0.00427  tr_dir=0.7323  va_dir=0.8520  va_mae=30.671%
+  ep   3   loss=0.00419  tr_dir=0.7349  va_dir=0.8452  va_mae=31.512%
+  ep   4   loss=0.00413  tr_dir=0.7409  va_dir=0.8212  va_mae=31.735%
+  ep   5   loss=0.00409  tr_dir=0.7412  va_dir=0.8178  va_mae=32.187%
+  ep   6   loss=0.00405  tr_dir=0.7457  va_dir=0.8247  va_mae=32.012%
+  ep   7   loss=0.00402  tr_dir=0.7477  va_dir=0.7936  va_mae=32.680%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5735  mae=30.716%  baseline_mae=30.287%
+  fold 5  selective dir_acc: @5%=0.6678  @10%=0.6137  @25%=0.6101  @50%=0.6216  @100%=0.5735
+  [ckpt] fold 5 saved → price_model_h252_sp500_tech_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.6027 ± 0.1003  (per fold: ['0.6458', '0.7732', '0.4834', '0.5374', '0.5735'])
+Test MAE:       29.475% ± 3.567%
+Baseline MAE:   29.599% ± 7.360%  (always-predict-zero)
+MAE vs baseline:-0.124pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.6776 ± 0.1719   per fold: ['0.6436', '0.9813', '0.4465', '0.6489', '0.6678']
+  cov= 10%   mean=0.6734 ± 0.1631   per fold: ['0.6262', '0.9774', '0.4872', '0.6626', '0.6137']
+  cov= 25%   mean=0.6653 ± 0.1591   per fold: ['0.6223', '0.9618', '0.4822', '0.6500', '0.6101']
+  cov= 50%   mean=0.6338 ± 0.1221   per fold: ['0.6353', '0.8513', '0.4769', '0.5842', '0.6216']
+  cov=100%   mean=0.6027 ± 0.1003   per fold: ['0.6458', '0.7732', '0.4834', '0.5374', '0.5735']
+
+Saved:
+  artifacts/price_model_h252_sp500_tech.pt
+  artifacts/price_scaler_h252_sp500_tech.pkl
+  artifacts/price_meta_h252_sp500_tech.json
+
+==================================================
+  Training sp500  horizon=252  features=sentiment
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 252 trading days (1-year) — artifacts tagged _h252
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+[ablation] features mode=sentiment  tag=_sp500_sent
+Features (6): ['sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge']
+Building windows — horizon=252d, window=20d, label=absolute
+  1,078,317 samples, stride=1  (positive return rate: 0.682)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  148007  (2016-08-05 → 2017-11-01)
+  val:     31715  (2017-11-01 → 2018-02-08)
+  test:   179719  (2018-02-08 → 2019-08-07)
+  ep   1*  loss=0.00394  tr_dir=0.7983  va_dir=0.5262  va_mae=24.398%
+  ep   2*  loss=0.00394  tr_dir=0.7983  va_dir=0.5262  va_mae=24.089%
+  ep   3*  loss=0.00394  tr_dir=0.7983  va_dir=0.5262  va_mae=23.982%
+  ep   4   loss=0.00394  tr_dir=0.7983  va_dir=0.5262  va_mae=24.488%
+  ep   5   loss=0.00393  tr_dir=0.7983  va_dir=0.5262  va_mae=24.343%
+  ep   6   loss=0.00393  tr_dir=0.7983  va_dir=0.5262  va_mae=24.209%
+  ep   7   loss=0.00393  tr_dir=0.7983  va_dir=0.5262  va_mae=24.118%
+  ep   8   loss=0.00392  tr_dir=0.7983  va_dir=0.5262  va_mae=24.378%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.6523  mae=23.123%  baseline_mae=23.848%
+  fold 1  selective dir_acc: @5%=0.7927  @10%=0.7285  @25%=0.7795  @50%=0.6283  @100%=0.6523
+  [ckpt] fold 1 saved → price_model_h252_sp500_sent_fold1.pt
+
+--- Fold 2/5 ---
+  train:  327726  (2016-08-05 → 2019-05-03)
+  val:     31715  (2019-05-03 → 2019-08-07)
+  test:   179719  (2019-08-07 → 2021-01-26)
+  ep   1*  loss=0.00412  tr_dir=0.7190  va_dir=0.5180  va_mae=27.402%
+  ep   2   loss=0.00405  tr_dir=0.7190  va_dir=0.5180  va_mae=27.507%
+  ep   3   loss=0.00405  tr_dir=0.7190  va_dir=0.5180  va_mae=27.472%
+  ep   4   loss=0.00405  tr_dir=0.7190  va_dir=0.5180  va_mae=27.643%
+  ep   5*  loss=0.00404  tr_dir=0.7190  va_dir=0.5180  va_mae=27.285%
+  ep   6   loss=0.00404  tr_dir=0.7190  va_dir=0.5180  va_mae=27.478%
+  ep   7   loss=0.00404  tr_dir=0.7190  va_dir=0.5180  va_mae=27.484%
+  ep   8   loss=0.00404  tr_dir=0.7190  va_dir=0.5180  va_mae=27.380%
+  ep   9   loss=0.00404  tr_dir=0.7190  va_dir=0.5180  va_mae=27.408%
+  ep  10*  loss=0.00403  tr_dir=0.7190  va_dir=0.5180  va_mae=27.272%
+  ep  11   loss=0.00403  tr_dir=0.7190  va_dir=0.5180  va_mae=27.518%
+  ep  12   loss=0.00402  tr_dir=0.7190  va_dir=0.5179  va_mae=27.448%
+  ep  13   loss=0.00400  tr_dir=0.7191  va_dir=0.5178  va_mae=27.443%
+  ep  14   loss=0.00399  tr_dir=0.7190  va_dir=0.5180  va_mae=27.720%
+  ep  15   loss=0.00397  tr_dir=0.7199  va_dir=0.5174  va_mae=27.368%
+  early stop at epoch 15 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.8249  mae=35.741%  baseline_mae=42.305%
+  fold 2  selective dir_acc: @5%=0.8898  @10%=0.8611  @25%=0.8448  @50%=0.8318  @100%=0.8249
+  [ckpt] fold 2 saved → price_model_h252_sp500_sent_fold2.pt
+
+--- Fold 3/5 ---
+  train:  507445  (2016-08-05 → 2020-10-21)
+  val:     31715  (2020-10-21 → 2021-01-26)
+  test:   179719  (2021-01-26 → 2022-07-07)
+  ep   1*  loss=0.00500  tr_dir=0.7336  va_dir=0.8850  va_mae=26.115%
+  ep   2   loss=0.00497  tr_dir=0.7336  va_dir=0.8850  va_mae=26.604%
+  ep   3   loss=0.00495  tr_dir=0.7336  va_dir=0.8850  va_mae=26.515%
+  ep   4   loss=0.00493  tr_dir=0.7336  va_dir=0.8850  va_mae=26.884%
+  ep   5   loss=0.00491  tr_dir=0.7336  va_dir=0.8850  va_mae=26.298%
+  ep   6   loss=0.00490  tr_dir=0.7336  va_dir=0.8850  va_mae=26.491%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.4809  mae=27.684%  baseline_mae=20.946%
+  fold 3  selective dir_acc: @5%=0.3402  @10%=0.3936  @25%=0.4404  @50%=0.4683  @100%=0.4809
+  [ckpt] fold 3 saved → price_model_h252_sp500_sent_fold3.pt
+
+--- Fold 4/5 ---
+  train:  687164  (2016-08-05 → 2022-04-04)
+  val:     31715  (2022-04-04 → 2022-07-07)
+  test:   179719  (2022-07-07 → 2023-12-12)
+  ep   1*  loss=0.00504  tr_dir=0.6834  va_dir=0.5397  va_mae=22.566%
+  ep   2   loss=0.00499  tr_dir=0.6839  va_dir=0.5395  va_mae=22.717%
+  ep   3   loss=0.00498  tr_dir=0.6846  va_dir=0.5375  va_mae=22.740%
+  ep   4   loss=0.00497  tr_dir=0.6838  va_dir=0.5397  va_mae=23.273%
+  ep   5   loss=0.00496  tr_dir=0.6852  va_dir=0.5390  va_mae=23.085%
+  ep   6   loss=0.00495  tr_dir=0.6858  va_dir=0.5387  va_mae=23.287%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.7361  mae=27.093%  baseline_mae=30.606%
+  fold 4  selective dir_acc: @5%=0.7105  @10%=0.7248  @25%=0.7304  @50%=0.7347  @100%=0.7361
+  [ckpt] fold 4 saved → price_model_h252_sp500_sent_fold4.pt
+
+--- Fold 5/5 ---
+  train:  866883  (2016-08-05 → 2023-09-13)
+  val:     31715  (2023-09-13 → 2023-12-12)
+  test:   179719  (2023-12-12 → 2025-05-20)
+  ep   1*  loss=0.00496  tr_dir=0.6823  va_dir=0.8700  va_mae=33.132%
+  ep   2*  loss=0.00495  tr_dir=0.6823  va_dir=0.8700  va_mae=32.608%
+  ep   3   loss=0.00495  tr_dir=0.6823  va_dir=0.8700  va_mae=32.974%
+  ep   4   loss=0.00494  tr_dir=0.6829  va_dir=0.8686  va_mae=33.086%
+  ep   5   loss=0.00493  tr_dir=0.6824  va_dir=0.8700  va_mae=32.797%
+  ep   6   loss=0.00492  tr_dir=0.6830  va_dir=0.8705  va_mae=32.896%
+  ep   7   loss=0.00491  tr_dir=0.6835  va_dir=0.8695  va_mae=33.414%
+  early stop at epoch 7 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.6461  mae=28.816%  baseline_mae=30.287%
+  fold 5  selective dir_acc: @5%=0.7038  @10%=0.6648  @25%=0.6380  @50%=0.6346  @100%=0.6461
+  [ckpt] fold 5 saved → price_model_h252_sp500_sent_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.6681 ± 0.1140  (per fold: ['0.6523', '0.8249', '0.4809', '0.7361', '0.6461'])
+Test MAE:       28.491% ± 4.101%
+Baseline MAE:   29.599% ± 7.360%  (always-predict-zero)
+MAE vs baseline:-1.107pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.6874 ± 0.1862   per fold: ['0.7927', '0.8898', '0.3402', '0.7105', '0.7038']
+  cov= 10%   mean=0.6746 ± 0.1544   per fold: ['0.7285', '0.8611', '0.3936', '0.7248', '0.6648']
+  cov= 25%   mean=0.6866 ± 0.1404   per fold: ['0.7795', '0.8448', '0.4404', '0.7304', '0.6380']
+  cov= 50%   mean=0.6595 ± 0.1212   per fold: ['0.6283', '0.8318', '0.4683', '0.7347', '0.6346']
+  cov=100%   mean=0.6681 ± 0.1140   per fold: ['0.6523', '0.8249', '0.4809', '0.7361', '0.6461']
+
+Saved:
+  artifacts/price_model_h252_sp500_sent.pt
+  artifacts/price_scaler_h252_sp500_sent.pkl
+  artifacts/price_meta_h252_sp500_sent.json
+
+==================================================
+  Training sp500  horizon=252  features=both
+==================================================
+Device: cuda
+  GPU: NVIDIA GeForce RTX 5070 Ti Laptop GPU  sm_120  12.3 GB  torch=2.11.0+cu130  cuda=13.0
+Universe: 503 tickers
+Horizon: 252 trading days (1-year) — artifacts tagged _h252
+Loading cached panel from artifacts/panel_sp500.txt_10y.parquet
+  1,214,972 rows, 503 tickers
+  panel ready in 0s — 1,214,972 (date, ticker) rows
+Loaded macro cache: 2510 days
+  joined macro: dropped 0 rows missing macro context
+Adding cross-sectional rank features...
+  computing cross-sectional ranks for ['rsi_14', 'ret_1d', 'volume', 'macd']...
+  panel after cross-sectional: 1,214,972 rows
+Joining historical sentiment from artifacts/sp500_sentiment_daily.parquet...
+  [sentiment] panel tickers=503, sentiment tickers=503, common=503
+  [sentiment] panel dates  : 2016-07-11 → 2026-05-22
+  [sentiment] sent  dates  : 2012-04-17 → 2026-05-25
+  [sentiment] 320,172 / 1,214,972 ticker-days had news (26.4%)
+Fetching historical earnings surprises...
+Loaded earnings cache: 22,548 rows (962 tickers)
+  [earnings] 69,530 ticker-days within earnings window (5.7%)
+[ablation] features mode=both  tag=_sp500_both
+Features (28): ['ret_1d', 'ret_5d', 'ret_20d', 'rsi_14', 'macd_norm', 'macd_sig_norm', 'ema12_dev', 'ema26_dev', 'vol_20d', 'volume_rel', 'bb_pct', 'vix', 'vix_ret_5d', 'yield_spread', 'spy_ret_5d', 'xs_rank_rsi_14', 'xs_rank_ret_1d', 'xs_rank_volume', 'xs_rank_macd', 'sentiment_mean', 'sentiment_std', 'log_news_count', 'has_news', 'sentiment_5d_mean', 'sentiment_surge', 'eps_surprise_pct', 'days_since_earn_norm', 'is_earnings_window']
+Building windows — horizon=252d, window=20d, label=absolute
+  1,078,317 samples, stride=1  (positive return rate: 0.682)
+
+Running 5-fold walk-forward CV...
+
+--- Fold 1/5 ---
+  train:  148007  (2016-08-05 → 2017-11-01)
+  val:     31715  (2017-11-01 → 2018-02-08)
+  test:   179719  (2018-02-08 → 2019-08-07)
+  ep   1*  loss=0.00400  tr_dir=0.7983  va_dir=0.5253  va_mae=19.351%
+  ep   2   loss=0.00376  tr_dir=0.7987  va_dir=0.5257  va_mae=19.646%
+  ep   3   loss=0.00366  tr_dir=0.7985  va_dir=0.5262  va_mae=20.541%
+  ep   4   loss=0.00356  tr_dir=0.7996  va_dir=0.5262  va_mae=20.366%
+  ep   5   loss=0.00344  tr_dir=0.8000  va_dir=0.5264  va_mae=20.340%
+  ep   6   loss=0.00335  tr_dir=0.8008  va_dir=0.5263  va_mae=19.463%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 1  dir_acc=0.6503  mae=22.320%  baseline_mae=23.848%
+  fold 1  selective dir_acc: @5%=0.7450  @10%=0.7410  @25%=0.7272  @50%=0.6987  @100%=0.6503
+  [ckpt] fold 1 saved → price_model_h252_sp500_both_fold1.pt
+
+--- Fold 2/5 ---
+  train:  327726  (2016-08-05 → 2019-05-03)
+  val:     31715  (2019-05-03 → 2019-08-07)
+  test:   179719  (2019-08-07 → 2021-01-26)
+  ep   1*  loss=0.00379  tr_dir=0.7465  va_dir=0.5333  va_mae=25.755%
+  ep   2   loss=0.00365  tr_dir=0.7553  va_dir=0.5371  va_mae=25.859%
+  ep   3   loss=0.00357  tr_dir=0.7621  va_dir=0.5397  va_mae=26.029%
+  ep   4   loss=0.00350  tr_dir=0.7690  va_dir=0.5361  va_mae=26.056%
+  ep   5   loss=0.00343  tr_dir=0.7639  va_dir=0.5382  va_mae=26.308%
+  ep   6   loss=0.00337  tr_dir=0.7697  va_dir=0.5386  va_mae=26.073%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 2  dir_acc=0.7607  mae=34.445%  baseline_mae=42.305%
+  fold 2  selective dir_acc: @5%=0.9848  @10%=0.9791  @25%=0.9609  @50%=0.8284  @100%=0.7607
+  [ckpt] fold 2 saved → price_model_h252_sp500_both_fold2.pt
+
+--- Fold 3/5 ---
+  train:  507445  (2016-08-05 → 2020-10-21)
+  val:     31715  (2020-10-21 → 2021-01-26)
+  test:   179719  (2021-01-26 → 2022-07-07)
+  ep   1*  loss=0.00450  tr_dir=0.7464  va_dir=0.8850  va_mae=24.613%
+  ep   2*  loss=0.00427  tr_dir=0.7553  va_dir=0.8854  va_mae=24.420%
+  ep   3*  loss=0.00418  tr_dir=0.7594  va_dir=0.8850  va_mae=24.066%
+  ep   4   loss=0.00411  tr_dir=0.7612  va_dir=0.8848  va_mae=24.243%
+  ep   5   loss=0.00405  tr_dir=0.7688  va_dir=0.8849  va_mae=24.711%
+  ep   6*  loss=0.00399  tr_dir=0.7749  va_dir=0.8850  va_mae=24.050%
+  ep   7   loss=0.00394  tr_dir=0.7741  va_dir=0.8850  va_mae=25.643%
+  ep   8   loss=0.00389  tr_dir=0.7743  va_dir=0.8850  va_mae=25.351%
+  ep   9   loss=0.00385  tr_dir=0.7791  va_dir=0.8855  va_mae=24.548%
+  ep  10   loss=0.00381  tr_dir=0.7796  va_dir=0.8853  va_mae=25.629%
+  ep  11   loss=0.00378  tr_dir=0.7848  va_dir=0.8854  va_mae=24.605%
+  early stop at epoch 11 (no val MAE improvement for 5 epochs)
+  fold 3  dir_acc=0.4856  mae=30.319%  baseline_mae=20.946%
+  fold 3  selective dir_acc: @5%=0.4363  @10%=0.4671  @25%=0.4878  @50%=0.4812  @100%=0.4856
+  [ckpt] fold 3 saved → price_model_h252_sp500_both_fold3.pt
+
+--- Fold 4/5 ---
+  train:  687164  (2016-08-05 → 2022-04-04)
+  val:     31715  (2022-04-04 → 2022-07-07)
+  test:   179719  (2022-07-07 → 2023-12-12)
+  ep   1*  loss=0.00434  tr_dir=0.7296  va_dir=0.4979  va_mae=21.360%
+  ep   2   loss=0.00416  tr_dir=0.7418  va_dir=0.4866  va_mae=21.663%
+  ep   3*  loss=0.00408  tr_dir=0.7449  va_dir=0.5052  va_mae=21.155%
+  ep   4   loss=0.00402  tr_dir=0.7525  va_dir=0.4859  va_mae=21.738%
+  ep   5   loss=0.00396  tr_dir=0.7569  va_dir=0.4913  va_mae=21.597%
+  ep   6   loss=0.00391  tr_dir=0.7623  va_dir=0.5054  va_mae=21.472%
+  ep   7   loss=0.00386  tr_dir=0.7648  va_dir=0.4889  va_mae=22.136%
+  ep   8   loss=0.00382  tr_dir=0.7709  va_dir=0.5026  va_mae=21.710%
+  early stop at epoch 8 (no val MAE improvement for 5 epochs)
+  fold 4  dir_acc=0.5123  mae=30.691%  baseline_mae=30.606%
+  fold 4  selective dir_acc: @5%=0.5370  @10%=0.6024  @25%=0.5935  @50%=0.5396  @100%=0.5123
+  [ckpt] fold 4 saved → price_model_h252_sp500_both_fold4.pt
+
+--- Fold 5/5 ---
+  train:  866883  (2016-08-05 → 2023-09-13)
+  val:     31715  (2023-09-13 → 2023-12-12)
+  test:   179719  (2023-12-12 → 2025-05-20)
+  ep   1*  loss=0.00445  tr_dir=0.7241  va_dir=0.8678  va_mae=31.204%
+  ep   2   loss=0.00424  tr_dir=0.7343  va_dir=0.8184  va_mae=32.776%
+  ep   3   loss=0.00415  tr_dir=0.7410  va_dir=0.7724  va_mae=33.631%
+  ep   4   loss=0.00408  tr_dir=0.7494  va_dir=0.7920  va_mae=32.939%
+  ep   5   loss=0.00402  tr_dir=0.7494  va_dir=0.7577  va_mae=33.786%
+  ep   6   loss=0.00398  tr_dir=0.7559  va_dir=0.7647  va_mae=33.034%
+  early stop at epoch 6 (no val MAE improvement for 5 epochs)
+  fold 5  dir_acc=0.5874  mae=29.918%  baseline_mae=30.287%
+  fold 5  selective dir_acc: @5%=0.6827  @10%=0.6423  @25%=0.6355  @50%=0.6263  @100%=0.5874
+  [ckpt] fold 5 saved → price_model_h252_sp500_both_fold5.pt
+
+============================================================
+WALK-FORWARD CV RESULTS (5 folds)  [regression]
+============================================================
+Dir accuracy:   0.5992 ± 0.0993  (per fold: ['0.6503', '0.7607', '0.4856', '0.5123', '0.5874'])
+Test MAE:       29.539% ± 3.956%
+Baseline MAE:   29.599% ± 7.360%  (always-predict-zero)
+MAE vs baseline:-0.060pp
+
+Selective dir_acc (top-K% by |pred|):
+  cov=  5%   mean=0.6772 ± 0.1881   per fold: ['0.7450', '0.9848', '0.4363', '0.5370', '0.6827']
+  cov= 10%   mean=0.6864 ± 0.1707   per fold: ['0.7410', '0.9791', '0.4671', '0.6024', '0.6423']
+  cov= 25%   mean=0.6810 ± 0.1597   per fold: ['0.7272', '0.9609', '0.4878', '0.5935', '0.6355']
+  cov= 50%   mean=0.6348 ± 0.1219   per fold: ['0.6987', '0.8284', '0.4812', '0.5396', '0.6263']
+  cov=100%   mean=0.5992 ± 0.0993   per fold: ['0.6503', '0.7607', '0.4856', '0.5123', '0.5874']
+
+Saved:
+  artifacts/price_model_h252_sp500_both.pt
+  artifacts/price_scaler_h252_sp500_both.pkl
+  artifacts/price_meta_h252_sp500_both.json
+(.venv) daniel@pop-os:~/dev/university/licenta/backend$
