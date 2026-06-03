@@ -1,0 +1,57 @@
+{
+  "tag": "direction_xsmom_sentiment_h21",
+  "horizon": 21,
+  "ensemble_seeds": 3,
+  "timestamp": "2026-05-28T19:56:08.423299+00:00",
+  "n_samples": 1012523,
+  "blanket_accuracy": 0.5002636990157212,
+  "selective_curve": [
+    {
+      "coverage": 0.05,
+      "n": 42188,
+      "accuracy": 0.5086043424670522
+    },
+    {
+      "coverage": 0.1,
+      "n": 84376,
+      "accuracy": 0.5013155399639708
+    },
+    {
+      "coverage": 0.15,
+      "n": 126564,
+      "accuracy": 0.49721089725356343
+    },
+    {
+      "coverage": 0.2,
+      "n": 168753,
+      "accuracy": 0.4959141467114659
+    },
+    {
+      "coverage": 0.3,
+      "n": 253129,
+      "accuracy": 0.49713782300724135
+    },
+    {
+      "coverage": 0.5,
+      "n": 421882,
+      "accuracy": 0.4992651973774657
+    },
+    {
+      "coverage": 0.75,
+      "n": 632823,
+      "accuracy": 0.5005191024978548
+    },
+    {
+      "coverage": 1.0,
+      "n": 843765,
+      "accuracy": 0.5002636990157212
+    }
+  ],
+  "model": {
+    "window": 20,
+    "hidden": 32,
+    "dropout": 0.3,
+    "lr": 0.0005
+  },
+  "elapsed_sec": 274.4
+}

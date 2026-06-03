@@ -5,6 +5,7 @@ backend/app/__pycache__/
 frontend/node_modules/
 frontend/dist/
 .DS_Store
+.claude/
 
 # Thesis run logs (regenerable)
 backend/artifacts/*.txt

@@ -32,7 +32,7 @@ import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
 
 from config import TECH_FEATURES
-from build_xs_panel import XS_FEATURES
+from build_xs_panel import XS_FEATURES, SENT_FEATURES, INJ_FEATURES
 from thesis_model import SentimentFusionLSTM
 from train_price import walk_forward_folds
 from train_pooled import add_relative_label, _batched_logits
@@ -58,12 +58,13 @@ WINDOW_END = "2026-03-31"
 COVERAGE_GRID = [0.05, 0.10, 0.15, 0.20, 0.30, 0.50, 0.75, 1.00]
 
 
-def build_samples(panel: pd.DataFrame, horizon: int):
-    """Windows of technical features (LSTM) + cross-sectional momentum vector
-    (injected) + relative-direction label. Sorted by date."""
+def build_samples(panel: pd.DataFrame, horizon: int, inj_features: list[str], news_only: bool = False):
+    """Windows of technical features (LSTM) + injected vector + relative-direction label."""
     panel = add_relative_label(panel, horizon)
     lo, hi = pd.Timestamp(WINDOW_START), pd.Timestamp(WINDOW_END)
     Xt, Xs, y, dates, tickers = [], [], [], [], []
+
+    has_news_col = "log_news_count" in panel.columns
 
     for ticker, sub in panel.groupby(level="ticker", sort=False):
         sub = sub.droplevel("ticker").sort_index()
@@ -71,12 +72,16 @@ def build_samples(panel: pd.DataFrame, horizon: int):
         if len(sub) < WINDOW + horizon + 5:
             continue
         tech = sub[TECH_FEATURES].values.astype(np.float32)
-        xs = sub[XS_FEATURES].values.astype(np.float32)
+        inj_cols = [c for c in inj_features if c in sub.columns]
+        xs = sub[inj_cols].fillna(0.0).values.astype(np.float32)
         yrel = sub["y_rel"].values.astype(np.float32)
+        news_count = sub["log_news_count"].values if has_news_col else None
         idx = sub.index.values
         for t in range(WINDOW - 1, len(sub) - horizon):
             d = pd.Timestamp(idx[t])
             if not (lo <= d <= hi):
+                continue
+            if news_only and (news_count is None or news_count[t] == 0):
                 continue
             Xt.append(tech[t - WINDOW + 1 : t + 1])
             Xs.append(xs[t])
@@ -97,7 +102,7 @@ def train_one(Xt_tr, Xs_tr, y_tr, Xt_va, Xs_va, y_va, device, seed):
     """Train a single model with early stopping; return it."""
     torch.manual_seed(seed)
     np.random.seed(seed)
-    model = SentimentFusionLSTM(n_tech=len(TECH_FEATURES), n_sentiment=len(XS_FEATURES),
+    model = SentimentFusionLSTM(n_tech=len(TECH_FEATURES), n_sentiment=Xs_tr.shape[-1],
                                 hidden=HIDDEN, num_layers=1, dropout=DROPOUT).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
 
@@ -120,7 +125,7 @@ def train_one(Xt_tr, Xs_tr, y_tr, Xt_va, Xs_va, y_va, device, seed):
             train_loss(model(Xt_t[sel].to(device), Xs_t[sel].to(device)),
                        y_t[sel].to(device)).backward()
             opt.step()
-        vloss = eval_loss(_batched_logits(model, Xt_va, Xs_va, device, len(XS_FEATURES)), yv).item()
+        vloss = eval_loss(_batched_logits(model, Xt_va, Xs_va, device, Xs_tr.shape[-1]), yv).item()
         if vloss < best - 1e-4:
             best, best_state, bad = vloss, {k: v.cpu().clone() for k, v in model.state_dict().items()}, 0
         else:
@@ -148,14 +153,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--horizon", type=int, default=20)
     ap.add_argument("--seeds", type=int, default=5, help="ensemble size per fold")
+    ap.add_argument("--features", choices=["xs", "sentiment", "both"], default="both",
+                    help="injected vector: xs=momentum ranks only, sentiment=FinBERT only, both=all")
+    ap.add_argument("--news-only", action="store_true",
+                    help="restrict samples to dates with at least one news article")
     args = ap.parse_args()
+
+    inj_features = {"xs": XS_FEATURES, "sentiment": SENT_FEATURES, "both": INJ_FEATURES}[args.features]
 
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"=== direction h{args.horizon} | ensemble={args.seeds} | device={device} ===")
+    news_tag = "_newsonly" if args.news_only else ""
+    print(f"=== direction h{args.horizon} | features={args.features}{news_tag} | ensemble={args.seeds} | device={device} ===")
 
     panel = pd.read_parquet(PANEL_PATH)
-    Xt, Xs, y, dates, tickers = build_samples(panel, args.horizon)
+    Xt, Xs, y, dates, tickers = build_samples(panel, args.horizon, inj_features, news_only=args.news_only)
     print(f"samples: {len(y):,}  | overall up-rate={y.mean():.4f}")
 
     idx = np.arange(len(y))
@@ -179,7 +191,7 @@ def main():
         probs = np.zeros(len(te), dtype=np.float64)
         for s in range(args.seeds):
             model = train_one(Xt_tr, Xs_tr, y[tr], Xt_va, Xs_va, y[va], device, seed=100 + s)
-            logits = _batched_logits(model, Xt_te, Xs_te, device, len(XS_FEATURES))
+            logits = _batched_logits(model, Xt_te, Xs_te, device, Xs_tr.shape[-1])
             probs += torch.sigmoid(logits).numpy()
         probs /= args.seeds
 
@@ -190,7 +202,7 @@ def main():
 
     pooled_df = pd.concat(pooled, ignore_index=True)
     pooled_df["horizon"] = args.horizon
-    tag = f"direction_xsmom_h{args.horizon}"
+    tag = f"direction_xsmom_{args.features}{news_tag}_h{args.horizon}"
     pooled_df.to_parquet(RUNS_DIR / f"preds_{tag}.parquet", index=False)
 
     blanket = (((pooled_df["p_up"] > 0.5).astype(int)) == pooled_df["y_true"]).mean()

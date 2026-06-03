@@ -1,0 +1,57 @@
+{
+  "tag": "direction_xsmom_both_h5",
+  "horizon": 5,
+  "ensemble_seeds": 3,
+  "timestamp": "2026-05-28T19:47:32.528102+00:00",
+  "n_samples": 1012523,
+  "blanket_accuracy": 0.5056680473828613,
+  "selective_curve": [
+    {
+      "coverage": 0.05,
+      "n": 42188,
+      "accuracy": 0.5322129515502039
+    },
+    {
+      "coverage": 0.1,
+      "n": 84376,
+      "accuracy": 0.5222338105622452
+    },
+    {
+      "coverage": 0.15,
+      "n": 126564,
+      "accuracy": 0.5175642362757182
+    },
+    {
+      "coverage": 0.2,
+      "n": 168753,
+      "accuracy": 0.5146101106350702
+    },
+    {
+      "coverage": 0.3,
+      "n": 253129,
+      "accuracy": 0.5109489627818227
+    },
+    {
+      "coverage": 0.5,
+      "n": 421882,
+      "accuracy": 0.5093035493336999
+    },
+    {
+      "coverage": 0.75,
+      "n": 632823,
+      "accuracy": 0.5072966690527999
+    },
+    {
+      "coverage": 1.0,
+      "n": 843765,
+      "accuracy": 0.5056680473828613
+    }
+  ],
+  "model": {
+    "window": 20,
+    "hidden": 32,
+    "dropout": 0.3,
+    "lr": 0.0005
+  },
+  "elapsed_sec": 245.5
+}
